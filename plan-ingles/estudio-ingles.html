@@ -195,19 +195,7 @@
   #remHora { background: var(--card2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-family: inherit; font-size: .85rem; }
   #remBanner { display: none; background: var(--card2); color: var(--accent); text-align: center; padding: 10px 16px; font-size: .85rem; font-weight: 600; cursor: pointer; border-bottom: 1px solid var(--border); }
 </style>
-<script>
-/* Tema: sigue al sistema y permite que el hub lo imponga (postMessage). */
-(function(){
-  var el = document.documentElement, mq = matchMedia("(prefers-color-scheme: dark)");
-  if (!el.getAttribute("data-theme")) el.setAttribute("data-theme", mq.matches ? "dark" : "light");
-  mq.addEventListener("change", function(e){
-    if (el.getAttribute("data-theme-locked") !== "1") el.setAttribute("data-theme", e.matches ? "dark" : "light");
-  });
-  window.addEventListener("message", function(ev){
-    if (ev.data && ev.data.type === "set-theme") { el.setAttribute("data-theme", ev.data.theme); el.setAttribute("data-theme-locked", "1"); }
-  });
-})();
-</script>
+<script src="../shared/theme.js"></script>
 </head>
 <body>
 
