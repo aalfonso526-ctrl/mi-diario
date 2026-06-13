@@ -125,7 +125,7 @@
     return fn(local, remote, tsLocal, tsRemote);
   }
 
-  window.DiarioMerge = {
+  var API = {
     mergeSection: mergeSection,
     mergeById: mergeById,
     dedupeBy: dedupeBy,
@@ -134,4 +134,7 @@
     lastWrite: lastWrite,
     strategies: STRATEGIES
   };
+  /* Disponible como global en el navegador (globalThis === window) y también
+     al evaluarse en Node para los tests (globalThis). */
+  (typeof globalThis !== "undefined" ? globalThis : window).DiarioMerge = API;
 })();

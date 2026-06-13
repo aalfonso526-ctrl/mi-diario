@@ -16,6 +16,11 @@ Desktop.ini
 *.swp
 *~
 
+# Node / tests (las dependencias de desarrollo no se versionan)
+node_modules/
+coverage/
+npm-debug.log*
+
 # Respaldos exportados desde la app
 mi-diario-respaldo-*.json
 movilidad-respaldo-*.json

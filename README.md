@@ -62,9 +62,29 @@ documento `users/{uid}` con formato `{ _v: 2, sections: { clave: {data, updatedA
 index.html            Hub con pestañas + dashboard "Hoy" + respaldo global
 manifest.json         Manifiesto PWA del hub
 sw.js                 Service worker del hub (cachea el armazón y las 4 apps)
+firebase-config.js    Config de Firebase del hub (sincronización en la nube)
 firestore.rules       Reglas de seguridad de Cloud Firestore
+shared/               Módulos compartidos (tema, store, fusión, sincronización)
 To-do/                Sección Tareas (+ su propio manifest/sw/iconos)
 Ejercicio/            Sección Ejercicio
 Movilidad/            Sección Movilidad
 plan-ingles/          Sección Inglés
+test/                 Tests (Vitest) del motor de fusión
 ```
+
+## Desarrollo (tests y linter)
+
+La app **no necesita build** para funcionar: se sirve tal cual. Las herramientas
+de calidad sí requieren [Node.js](https://nodejs.org) (LTS).
+
+```bash
+npm install        # instala Vitest y ESLint (dev)
+npm test           # corre los tests del motor de fusión (shared/merge.js)
+npm run test:watch # tests en modo watch
+npm run lint       # ESLint sobre shared/, sw.js y test/
+```
+
+Los tests evalúan `shared/merge.js` tal cual lo carga el navegador y cubren los
+escenarios de pérdida de datos que la sincronización debe impedir. `sync.js`
+(depende de Firebase) y el JS embebido en los `.html` no se cubren con tests
+unitarios todavía.
