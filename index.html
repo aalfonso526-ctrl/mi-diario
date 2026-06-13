@@ -413,14 +413,46 @@
     if (file) importAll(file);
     this.value = "";
   });
+  /* Validación de las claves de datos conocidas: un respaldo corrupto no debe
+     poder sobrescribir una sección con basura. Las claves de datos se parsean
+     y se comprueba su forma; si fallan, se descartan (no se escribe esa clave).
+     Las claves desconocidas (ajustes pequeños) se aceptan solo si son cadenas
+     cortas. */
+  var KNOWN_SHAPES = {
+    "todo-app-v1":          function (v) { return v && Array.isArray(v.tasks) && Array.isArray(v.goals); },
+    "entreno_historial_v1": function (v) { return Array.isArray(v); },
+    "entreno_cfg_v1":       function (v) { return v && typeof v === "object" && !Array.isArray(v); },
+    "entreno_draft_v1":     function (v) { return v === null || (typeof v === "object" && !Array.isArray(v)); },
+    "movilidad-progress":   function (v) { return v && typeof v === "object" && !Array.isArray(v); },
+    "planIngles_v1":        function (v) { return v && typeof v === "object" && v.dias && typeof v.dias === "object"; }
+  };
+  function sanitizeBackup(data) {
+    var clean = {}, accepted = 0, rejected = 0, dataKeys = 0;
+    Object.keys(data).forEach(function (k) {
+      var raw = data[k];
+      if (typeof raw !== "string" || raw.length > 5000000) { rejected++; return; }
+      if (KNOWN_SHAPES.hasOwnProperty(k)) {
+        var parsed;
+        try { parsed = JSON.parse(raw); } catch (e) { rejected++; return; }
+        if (!KNOWN_SHAPES[k](parsed)) { rejected++; return; }
+        dataKeys++;
+      }
+      clean[k] = raw; accepted++;
+    });
+    return { clean: clean, accepted: accepted, rejected: rejected, dataKeys: dataKeys };
+  }
   function importAll(file) {
     var rd = new FileReader();
     rd.onload = function () {
       var data;
       try { var p = JSON.parse(rd.result); data = (p && p.data) ? p.data : p; } catch (e) { data = null; }
       if (!data || typeof data !== "object") { alert("El archivo no es un respaldo válido de Mi Diario."); return; }
-      if (!confirm("Esto reemplazará los datos actuales de las cuatro secciones con los del respaldo. ¿Continuar?")) return;
-      Object.keys(data).forEach(function (k) { try { localStorage.setItem(k, data[k]); } catch (e) {} });
+      var r = sanitizeBackup(data);
+      if (!r.dataKeys) { alert("El archivo no contiene datos válidos de ninguna sección de Mi Diario."); return; }
+      var aviso = "Esto reemplazará los datos actuales de las cuatro secciones con los del respaldo.";
+      if (r.rejected) aviso += "\n\n(" + r.rejected + " entrada" + (r.rejected > 1 ? "s" : "") + " inválida" + (r.rejected > 1 ? "s" : "") + " se omitirá" + (r.rejected > 1 ? "n" : "") + ".)";
+      if (!confirm(aviso + "\n\n¿Continuar?")) return;
+      Object.keys(r.clean).forEach(function (k) { try { localStorage.setItem(k, r.clean[k]); } catch (e) {} });
       toast("Respaldo importado");
       reloadFrames();
       applyTheme();
