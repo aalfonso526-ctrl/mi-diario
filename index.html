@@ -248,6 +248,13 @@
 <input type="file" id="importFile" accept="application/json,.json" hidden>
 <div class="toast" id="toast"></div>
 
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="shared/store.js"></script>
+<script src="shared/merge.js"></script>
+<script src="shared/sync.js"></script>
 <script>
 (function () {
   "use strict";
@@ -256,6 +263,17 @@
   var buttons = Array.prototype.slice.call(document.querySelectorAll("#seg button"));
   var splash = document.getElementById("splash");
   var loaded = {};
+  var cloudReady = false;
+
+  /* Qué iframe recargar cuando la nube actualiza cada clave de datos. */
+  var KEY_TO_SECTION = {
+    "todo-app-v1": "tareas",
+    "entreno_historial_v1": "ejercicio",
+    "entreno_cfg_v1": "ejercicio",
+    "entreno_draft_v1": "ejercicio",
+    "movilidad-progress": "movilidad",
+    "planIngles_v1": "ingles"
+  };
 
   /* ---------- Tema: todas las secciones siguen el de To-do ----------
      To-do guarda su preferencia (auto/claro/oscuro) en localStorage["todo-theme"].
@@ -284,9 +302,23 @@
   /* Cuando To-do cambia su tema, escribe en localStorage y dispara 'storage' en el resto. */
   window.addEventListener("storage", function (e) {
     if (!e || e.key === THEME_KEY) applyTheme();
+    /* Una sección (iframe) cambió sus datos: avisa a la sincronización. */
+    if (e && e.key && cloudReady) window.DiarioSync.notifyLocalChange(e.key);
     /* Si el panel Hoy está visible y una sección cambió sus datos, refréscalo. */
     if (!panelHoy.classList.contains("hidden")) renderDash();
   });
+
+  /* La nube aplicó cambios remotos: recarga solo las secciones afectadas. */
+  function applyRemoteChanges(keys) {
+    var sections = {};
+    keys.forEach(function (k) { var s = KEY_TO_SECTION[k]; if (s) sections[s] = 1; });
+    frames.forEach(function (f) {
+      if (sections[f.dataset.key] && loaded[f.dataset.key]) {
+        try { f.contentWindow.location.reload(); } catch (e) { f.src = f.dataset.src; }
+      }
+    });
+    if (!panelHoy.classList.contains("hidden")) renderDash();
+  }
 
   /* ---------- Pantalla "Hoy" (dashboard) + Respaldo ----------
      En el mismo origen (http/https), el shell comparte localStorage con los
@@ -366,9 +398,10 @@
       '<div class="dash-greet">' + saludo + "</div>" +
       '<div class="dash-date">' + fecha + "</div>" +
       '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>" +
+      cloudCardHtml() +
       '<div class="dash-h">Datos y respaldo</div>' +
       '<div class="backup-card">' +
-        "<p>Tu progreso se guarda solo en este dispositivo. Exporta un respaldo de las cuatro secciones y guárdalo a salvo; podrás importarlo en otro dispositivo o si reinstalas.</p>" +
+        "<p>Exporta un respaldo de las cuatro secciones y guárdalo a salvo; podrás importarlo en otro dispositivo o si reinstalas.</p>" +
         '<div class="backup-btns">' +
           '<button class="btn-fill" id="btnExport">⬇ Exportar respaldo</button>' +
           '<button class="btn-soft" id="btnImport">⬆ Importar respaldo</button>' +
@@ -380,6 +413,37 @@
     });
     document.getElementById("btnExport").addEventListener("click", exportAll);
     document.getElementById("btnImport").addEventListener("click", function () { document.getElementById("importFile").click(); });
+    var btnCloud = document.getElementById("btnCloud");
+    if (btnCloud) {
+      btnCloud.addEventListener("click", function () {
+        if (window.DiarioSync.currentUser()) {
+          if (confirm("¿Cerrar sesión? La app seguirá funcionando con los datos de este dispositivo.")) window.DiarioSync.logout();
+        } else { window.DiarioSync.login(); }
+      });
+      updateCloudUI();
+    }
+  }
+
+  /* Tarjeta de sincronización (solo si Firebase está disponible). */
+  function cloudCardHtml() {
+    if (!cloudReady) return "";
+    return '<div class="dash-h">Sincronización</div>' +
+      '<div class="backup-card">' +
+        '<p id="cloudStatus"></p>' +
+        '<div class="backup-btns"><button id="btnCloud"></button></div>' +
+      "</div>";
+  }
+  function updateCloudUI() {
+    var status = document.getElementById("cloudStatus"), btn = document.getElementById("btnCloud");
+    if (!status || !btn) return;
+    var u = cloudReady ? window.DiarioSync.currentUser() : null;
+    if (u) {
+      status.textContent = "Sincronizando las 4 secciones como " + (u.email || "tu cuenta") + ". Tus datos se respaldan en la nube y se combinan entre dispositivos.";
+      btn.textContent = "Cerrar sesión"; btn.className = "btn-soft";
+    } else {
+      status.textContent = "Inicia sesión con Google para respaldar y combinar automáticamente las 4 secciones entre tus dispositivos.";
+      btn.textContent = "🔄 Activar sincronización"; btn.className = "btn-fill";
+    }
   }
 
   function card(go, ico, title, statusHtml, badgeHtml, progHtml) {
@@ -502,6 +566,17 @@
   buttons.forEach(function (b) {
     b.addEventListener("click", function () { show(b.dataset.key); });
   });
+
+  /* ---------- Sincronización en la nube (centralizada en el hub) ----------
+     Solo se inicializa Firebase; nada se escribe en la nube hasta que el
+     usuario inicia sesión. La fusión de cada snapshot es conservadora. */
+  if (window.FIREBASE_CONFIG && window.DiarioSync) {
+    cloudReady = window.DiarioSync.init({
+      config: window.FIREBASE_CONFIG,
+      onAuthChange: function () { if (!panelHoy.classList.contains("hidden")) renderDash(); },
+      onApplied: applyRemoteChanges
+    });
+  }
 
   var start = "hoy";
   try { var saved = localStorage.getItem(STORE); if (saved) start = saved; } catch (e) {}

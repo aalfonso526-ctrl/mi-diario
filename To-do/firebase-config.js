@@ -18,11 +18,8 @@
    };
    ============================================================ */
 
-var FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAR2HXEMA_XP4PuZaiZ2IWtyrF5Z4B_tbk",
-  authDomain: "mis-tareas-97b8d.firebaseapp.com",
-  projectId: "mis-tareas-97b8d",
-  storageBucket: "mis-tareas-97b8d.firebasestorage.app",
-  messagingSenderId: "342091244780",
-  appId: "1:342091244780:web:4942669d9f8177a8ab31c9"
-};
+/* La sincronización de Tareas ahora la gestiona el HUB de forma centralizada
+   (ver firebase-config.js en la raíz y shared/sync.js). Dejar esto en null
+   evita dos escritores sobre el mismo documento users/{uid}. La app de Tareas
+   abierta por separado funciona en local; el sync ocurre dentro del hub. */
+var FIREBASE_CONFIG = null;
