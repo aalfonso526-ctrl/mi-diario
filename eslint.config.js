@@ -10,8 +10,9 @@ const BASE_RULES = {
   ...js.configs.recommended.rules,
   /* El proyecto usa catch vacío a propósito (degradar sin romper). */
   "no-empty": ["error", { allowEmptyCatch: true }],
-  /* Las variables sin usar son aviso, no error: no deben tumbar la build. */
-  "no-unused-vars": "warn"
+  /* Variables sin usar como aviso (no tumban la build) y sin revisar el
+     parámetro de catch, que se omite a propósito en los catch vacíos. */
+  "no-unused-vars": ["warn", { caughtErrors: "none" }]
 };
 
 module.exports = [
