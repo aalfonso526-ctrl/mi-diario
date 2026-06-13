@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Plan de Inglés — 2h30 diarias</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --card2: #eef0f3;
+    --accent: #0071e3;
+    --accent2: #34c759;
+    --warn: #ff9500;
+    --text: #1d1d1f;
+    --muted: #86868b;
+    --border: rgba(0,0,0,0.08);
+    --done: #e9f9ee;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1c1c1e;
+    --card: #2c2c2e;
+    --card2: #3a3a3c;
+    --accent: #0a84ff;
+    --accent2: #30d158;
+    --warn: #ff9f0a;
+    --text: #f5f5f7;
+    --muted: #98989d;
+    --border: rgba(255,255,255,0.1);
+    --done: rgba(48,209,88,0.16);
+  }
+  :root[data-theme="dark"] .block.done { border-color: rgba(48,209,88,0.4); }
+  :root[data-theme="dark"] .anki-note { color: #ff9f0a; background: rgba(255,159,10,0.12); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+  header {
+    background: var(--card);
+    padding: 20px 16px 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: 1.35rem; }
+  header p { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+  .container { max-width: 760px; margin: 0 auto; padding: 16px; }
+
+  /* Tabs días */
+  .days {
+    display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 10px;
+  }
+  .days button {
+    flex: 1; min-width: 78px;
+    background: var(--card); color: var(--muted);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 4px; cursor: pointer; font-size: .8rem;
+    transition: all .15s;
+  }
+  .days button .pct { display: block; font-size: .7rem; margin-top: 2px; }
+  .days button.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  .days button.complete { border-color: var(--accent2); }
+
+  .day-title { margin: 10px 0 2px; font-size: 1.15rem; }
+  .day-goal { color: var(--muted); font-size: .88rem; margin-bottom: 14px; }
+
+  /* Bloques */
+  .block {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 10px; overflow: hidden;
+  }
+  .block.done { background: var(--done); border-color: rgba(52,199,89,0.35); }
+  .block-head {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer;
+  }
+  .block-head input[type=checkbox] {
+    width: 20px; height: 20px; accent-color: var(--accent2); cursor: pointer; flex-shrink: 0;
+  }
+  .block-info { flex: 1; }
+  .block-info .name { font-weight: 600; font-size: .95rem; }
+  .block-info .detail { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  .block.done .detail { color: var(--muted); }
+  .mins {
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px 9px; font-size: .78rem; color: var(--muted);
+    white-space: nowrap;
+  }
+  .timer-btn {
+    background: none; border: 1px solid var(--border); color: var(--accent);
+    border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: .82rem;
+  }
+  .timer-btn:hover { background: var(--card2); }
+
+  /* Timer flotante */
+  #timerBar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--card); border-top: 2px solid var(--accent);
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+    padding: 10px 16px; display: none; z-index: 50;
+  }
+  #timerBar.show { display: block; }
+  .timer-inner {
+    max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 14px;
+  }
+  #timerLabel { flex: 1; font-size: .85rem; color: var(--muted); }
+  #timerClock { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .timer-inner button {
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    padding: 7px 14px; cursor: pointer; font-size: .85rem;
+  }
+  .timer-inner button.secondary { background: var(--card2); color: var(--muted); }
+
+  /* Secciones */
+  .section {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px; margin: 14px 0;
+  }
+  .section h3 { font-size: .95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .prompt-box {
+    background: var(--card2); border-radius: 8px; padding: 12px;
+    font-size: .85rem; color: var(--text); line-height: 1.5; font-style: italic;
+  }
+  .copy-btn {
+    margin-top: 8px; background: var(--accent); color: #fff; border: none;
+    border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: .83rem;
+  }
+  .copy-btn.copied { background: var(--accent2); }
+  .prod-list { list-style: none; }
+  .prod-list li {
+    padding: 6px 0 6px 22px; position: relative; font-size: .88rem; color: var(--text);
+  }
+  .prod-list li::before { content: "🗣️"; position: absolute; left: 0; font-size: .8rem; }
+
+  /* Metas semanales */
+  .goals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 540px) { .goals-grid { grid-template-columns: 1fr; } }
+  .goal {
+    background: var(--card2); border-radius: 10px; padding: 10px 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .goal .g-name { font-size: .82rem; color: var(--muted); }
+  .goal .g-meta { font-size: .72rem; color: var(--muted); }
+  .goal-ctrl { display: flex; align-items: center; gap: 8px; }
+  .goal-ctrl button {
+    width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); cursor: pointer; font-size: 1rem;
+  }
+  .goal-ctrl .val { font-size: 1.1rem; font-weight: 700; min-width: 30px; text-align: center; }
+  .goal.met .val { color: var(--accent2); }
+
+  .progressbar {
+    height: 8px; background: var(--card2); border-radius: 6px; overflow: hidden; margin-top: 10px;
+  }
+  .progressbar div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .3s; }
+  .week-summary { font-size: .85rem; color: var(--muted); margin-top: 8px; }
+
+  .anki-note {
+    font-size: .8rem; color: #b35a00; margin-top: 10px;
+    background: rgba(255,149,0,.1); border-radius: 8px; padding: 8px 10px;
+  }
+  .reset-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: .78rem; margin-top: 12px;
+  }
+  .streak { font-size: .9rem; color: var(--warn); margin-top: 4px; }
+
+  /* ── Conmutador de vista e Historial ── */
+  .view-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .view-tabs button {
+    flex: 1; border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    border-radius: 10px; padding: 9px; cursor: pointer; font-size: .85rem; font-weight: 600; transition: all .15s;
+  }
+  .view-tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .hist-stats { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .hist-stat { flex: 1; min-width: 90px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+  .hist-stat .n { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+  .hist-stat .l { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+  .hist-week-h { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 18px 2px 8px; font-weight: 700; }
+  .hist-day-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+  .hist-day-item.full { border-color: rgba(52,199,89,0.4); }
+  .hist-day-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .hist-day-name { font-weight: 600; font-size: .95rem; }
+  .hist-day-date { color: var(--muted); font-size: .8rem; }
+  .hist-day-meta { font-size: .8rem; color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .hist-day-item.full .hist-day-meta { color: var(--accent2); }
+  .hist-bar { height: 6px; background: var(--card2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .hist-bar div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .hist-empty { text-align: center; color: var(--muted); padding: 44px 16px; font-size: .9rem; }
+  .section textarea { width: 100%; min-height: 130px; background: var(--card2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 10px; font-family: inherit; font-size: .9rem; resize: vertical; }
+  #remHora { background: var(--card2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-family: inherit; font-size: .85rem; }
+  #remBanner { display: none; background: var(--card2); color: var(--accent); text-align: center; padding: 10px 16px; font-size: .85rem; font-weight: 600; cursor: pointer; border-bottom: 1px solid var(--border); }
+</style>
+<script>
+/* Tema: sigue al sistema y permite que el hub lo imponga (postMessage). */
+(function(){
+  var el = document.documentElement, mq = matchMedia("(prefers-color-scheme: dark)");
+  if (!el.getAttribute("data-theme")) el.setAttribute("data-theme", mq.matches ? "dark" : "light");
+  mq.addEventListener("change", function(e){
+    if (el.getAttribute("data-theme-locked") !== "1") el.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+  window.addEventListener("message", function(ev){
+    if (ev.data && ev.data.type === "set-theme") { el.setAttribute("data-theme", ev.data.theme); el.setAttribute("data-theme-locked", "1"); }
+  });
+})();
+</script>
+</head>
+<body>
+
+<header>
+  <h1>🇬🇧 Mi Plan de Inglés</h1>
+  <p>2 h 30 min diarias · Escuchar → imitar → entender → guardar → practicar → hablar → escribir</p>
+  <div class="streak" id="streak"></div>
+</header>
+
+<div id="remBanner">🔔 Aún te faltan bloques de inglés hoy · toca para ir al plan</div>
+
+<div class="container">
+
+  <div class="view-tabs">
+    <button id="tab-hoy" class="active">Plan</button>
+    <button id="tab-hist">Historial</button>
+  </div>
+
+  <div id="view-plan">
+  <div class="days" id="dayTabs"></div>
+
+  <h2 class="day-title" id="dayTitle"></h2>
+  <p class="day-goal" id="dayGoal"></p>
+  <div class="progressbar"><div id="dayProgress" style="width:0%"></div></div>
+  <br>
+
+  <div id="blocks"></div>
+
+  <div class="section">
+    <h3>🤖 Prompt para la IA de hoy</h3>
+    <div class="prompt-box" id="aiPrompt"></div>
+    <button class="copy-btn" id="copyPrompt">Copiar prompt</button>
+  </div>
+
+  <div class="section">
+    <h3>✅ Producción mínima del día</h3>
+    <ul class="prod-list" id="prodList"></ul>
+  </div>
+
+  <div class="section">
+    <h3>✍️ Mi writing de hoy</h3>
+    <textarea id="writingArea" placeholder="Pega o escribe aquí tu texto del día (el plan lo pide varios días). Se guarda solo."></textarea>
+    <div class="g-meta" id="writingSaved" style="margin-top:6px;"></div>
+  </div>
+
+  <div class="section">
+    <h3>📊 Metas de la semana <span style="font-size:.75rem;color:var(--muted)" id="weekLabel"></span></h3>
+    <div class="goals-grid" id="goalsGrid"></div>
+    <div class="week-summary" id="weekSummary"></div>
+    <div class="anki-note">💡 Regla de oro de Anki: nunca tarjetas de palabras sueltas, siempre frases completas. Mazos: <b>English Daily Sentences</b>, <b>My Mistakes</b>, <b>Listening Vocabulary</b>, <b>Useful Questions</b>.</div>
+    <button class="reset-btn" id="resetWeek">Reiniciar semana (nueva semana de estudio)</button>
+  </div>
+
+  <div class="section">
+    <h3>🔔 Recordatorio diario</h3>
+    <label style="display:flex;align-items:center;gap:10px;font-size:.9rem;cursor:pointer;">
+      <input type="checkbox" id="remOn" style="width:18px;height:18px;accent-color:var(--accent);">
+      Avisarme si no he terminado mis bloques
+    </label>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span class="g-name">A las</span>
+      <input type="time" id="remHora" value="19:00">
+    </div>
+    <div class="anki-note" id="remNote">El aviso llega mientras la app esté abierta (también en segundo plano). Para recibirlo con la app cerrada, instálala desde el navegador y permite notificaciones.</div>
+  </div>
+
+  <div class="section">
+    <h3>💾 Datos y respaldo</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="reset-btn" id="exportIng">Exportar respaldo</button>
+      <button class="reset-btn" id="importIngBtn">Importar respaldo</button>
+    </div>
+    <input type="file" id="importIng" accept="application/json,.json" hidden>
+  </div>
+  </div>
+
+  <div id="view-historial" style="display:none">
+    <div class="hist-stats" id="histStats"></div>
+    <div id="histList"></div>
+  </div>
+
+</div>
+
+<div id="timerBar">
+  <div class="timer-inner">
+    <span id="timerLabel"></span>
+    <span id="timerClock">00:00</span>
+    <button id="timerToggle">Pausar</button>
+    <button class="secondary" id="timerClose">Cerrar</button>
+  </div>
+</div>
+
+<script>
+// ====== DATOS DEL PLAN ======
+const PLAN = [
+  { // 0 = Lunes
+    nombre: "Lunes", foco: "Base y diagnóstico",
+    objetivo: "Identificar tu punto de partida y activar el hábito.",
+    bloques: [
+      { min: 15, act: "Duolingo", det: "Una lección normal + repaso de errores" },
+      { min: 25, act: "Anki", det: "Crea el mazo “English Daily Sentences” y añade 10 frases básicas" },
+      { min: 35, act: "Listening (VOA)", det: "Audio fácil 2 veces: primero sin leer, luego con transcripción" },
+      { min: 25, act: "Gramática British Council", det: "Present simple vs present continuous + escribe 5 frases propias y dilas en voz alta" },
+      { min: 35, act: "Speaking con IA", det: "Conversación sobre tu rutina diaria" },
+      { min: 15, act: "Writing", det: "Escribe 8–10 frases sobre tu día" }
+    ],
+    prompt: "Act as my English speaking coach. I am learning English. Ask me simple questions about my daily routine. Correct my most important mistakes in Spanish. After each correction, give me a better version of my answer and one follow-up question.",
+    produccion: ["I usually wake up at…", "I study/work from…", "I am learning English because…"]
+  },
+  { // Martes
+    nombre: "Martes", foco: "Pronunciación y frases útiles",
+    objetivo: "Empezar a sonar más natural, no solo “leer inglés”.",
+    bloques: [
+      { min: 15, act: "Duolingo", det: "Una lección + repaso de errores" },
+      { min: 25, act: "Anki", det: "Repasa + agrega 10 frases del audio del lunes" },
+      { min: 35, act: "Shadowing", det: "Audio corto VOA/BBC: escucha → pausa → imita ritmo y entonación ×3 → grábate 1 min → compara" },
+      { min: 25, act: "Gramática British Council", det: "Past simple + 5 frases propias en voz alta" },
+      { min: 35, act: "Speaking con IA", det: "Cuenta qué hiciste ayer" },
+      { min: 15, act: "Reading en voz alta", det: "Texto corto del mismo audio" }
+    ],
+    prompt: "Help me practice the past simple. Ask me questions about what I did yesterday. Correct my grammar, pronunciation suggestions, and give me 3 better ways to say my ideas.",
+    produccion: ["Yesterday, I woke up at…", "I studied…", "I ate…", "I watched…", "I went…"]
+  },
+  { // Miércoles
+    nombre: "Miércoles", foco: "Listening fuerte + vocabulario activo",
+    objetivo: "Mejorar comprensión auditiva y usar vocabulario nuevo.",
+    bloques: [
+      { min: 15, act: "Duolingo", det: "Una lección + errores" },
+      { min: 25, act: "Anki", det: "Repaso + 10–15 frases nuevas" },
+      { min: 35, act: "Listening sin subtítulos", det: "Anota en 3 columnas: I understood / I guessed / New words. Busca ideas principales, no entenderlo todo" },
+      { min: 25, act: "Gramática British Council", det: "There is / there are + preposiciones (in, on, at, next to, behind, between)" },
+      { min: 35, act: "Speaking con IA", det: "Describe tu casa, cuarto, ciudad o lugar de trabajo" },
+      { min: 15, act: "Writing", det: "Descripción de tu habitación o ciudad" }
+    ],
+    prompt: "Ask me to describe places in English. Correct my use of “there is,” “there are,” and prepositions like in, on, at, next to, behind, between. Make me repeat corrected sentences.",
+    produccion: ["There is a…", "There are some…", "It is next to…", "In my city, there are…"]
+  },
+  { // Jueves
+    nombre: "Jueves", foco: "Speaking intensivo",
+    objetivo: "Hablar más tiempo sin detenerte tanto.",
+    bloques: [
+      { min: 15, act: "Duolingo", det: "Una lección + errores" },
+      { min: 25, act: "Anki", det: "Repaso + frases de speaking" },
+      { min: 35, act: "Listening (BBC/VOA)", det: "Escucha un audio y resume primero en español, luego en inglés" },
+      { min: 25, act: "Gramática British Council", det: "Future con going to / will + 5 frases propias" },
+      { min: 35, act: "Speaking con IA", det: "Conversación sobre planes futuros" },
+      { min: 15, act: "Speaking grabado", det: "Monólogo de 2 minutos: “My plans for this year”. Busca continuidad, no perfección" }
+    ],
+    prompt: "I want to practice talking about future plans. Ask me questions using “going to” and “will.” After I answer, correct my answer and make me repeat the improved version.",
+    produccion: ["I am going to improve my English.", "I will study every day.", "I am going to practice speaking with AI.", "I want to become more fluent."]
+  },
+  { // Viernes
+    nombre: "Viernes", foco: "Escritura corregida + conversación",
+    objetivo: "Detectar errores que repites.",
+    bloques: [
+      { min: 15, act: "Duolingo", det: "Una lección + errores" },
+      { min: 25, act: "Anki", det: "Repaso + tarjetas de tus errores (mazo “My Mistakes”)" },
+      { min: 35, act: "Listening + shadowing", det: "Audio corto" },
+      { min: 25, act: "Gramática British Council", det: "Repaso de la gramática de lunes a jueves" },
+      { min: 35, act: "Speaking con IA", det: "Conversación libre con corrección" },
+      { min: 15, act: "Cambridge Write & Improve", det: "Texto: “Why I want to learn English” (100–150 palabras). Convierte el feedback en tarjetas Anki" }
+    ],
+    prompt: "I will paste a short English text. Correct it like an English teacher. First show me the corrected version, then explain my 5 most important mistakes in Spanish, then give me 5 Anki cards based on those mistakes.",
+    produccion: ["Texto de 100–150 palabras enviado a Write & Improve", "Errores convertidos en tarjetas Anki"]
+  },
+  { // Sábado
+    nombre: "Sábado", foco: "Simulación de vida real",
+    objetivo: "Usar inglés en situaciones prácticas.",
+    bloques: [
+      { min: 15, act: "Duolingo", det: "Una lección + errores" },
+      { min: 25, act: "Anki", det: "Repaso normal" },
+      { min: 35, act: "Listening situación real", det: "Restaurant, travel, job interview, shopping…" },
+      { min: 25, act: "Gramática British Council", det: "Questions and answers" },
+      { min: 35, act: "Roleplay con IA", det: "Elige: restaurant / job interview / travel / store / school-work" },
+      { min: 15, act: "Reading", det: "Lee un diálogo en voz alta" }
+    ],
+    prompt: "Let’s do a roleplay. You are a native English speaker and I am practicing English. Choose one situation: restaurant, job interview, travel, store, or work. Speak naturally but not too fast. Correct me after every 3 replies.",
+    produccion: ["Participar en un diálogo sencillo de 5–8 intercambios"]
+  },
+  { // Domingo
+    nombre: "Domingo", foco: "Repaso, medición y ajuste",
+    objetivo: "Consolidar, no meter demasiado contenido nuevo.",
+    bloques: [
+      { min: 15, act: "Duolingo", det: "Solo repaso" },
+      { min: 25, act: "Anki", det: "Solo repasos, sin tarjetas nuevas" },
+      { min: 35, act: "Re-escucha", det: "Tus audios de la semana; repite los más difíciles" },
+      { min: 25, act: "Gramática British Council", det: "Repaso de puntos débiles" },
+      { min: 35, act: "Evaluación oral con IA", det: "10 preguntas: rutina, pasado, futuro y opinión" },
+      { min: 15, act: "Resumen semanal escrito", det: "This week I learned… / My biggest problem was… / Next week I want to improve…" }
+    ],
+    prompt: "Evaluate my English speaking level based on this conversation. Ask me 10 questions: 3 about my routine, 3 about the past, 2 about future plans, and 2 opinion questions. At the end, give me feedback in Spanish: fluency, grammar, vocabulary, pronunciation, and what I should improve next week.",
+    produccion: ["¿Puedes hablar 2 minutos sobre tu rutina, tu pasado y tus planes? Si sí, la semana funcionó."]
+  }
+];
+
+const GOALS = [
+  { id: "frases", nombre: "Frases nuevas en Anki", meta: 60, metaTxt: "meta: 60–90" },
+  { id: "audios", nombre: "Audios trabajados", meta: 5, metaTxt: "meta: 5–7" },
+  { id: "speaking", nombre: "Sesiones de speaking", meta: 7, metaTxt: "meta: 7" },
+  { id: "textos", nombre: "Textos escritos", meta: 2, metaTxt: "meta: 2–3" },
+  { id: "grabaciones", nombre: "Grabaciones propias", meta: 2, metaTxt: "meta: 2" },
+  { id: "gramatica", nombre: "Temas de gramática", meta: 5, metaTxt: "meta: 5–6" }
+];
+
+// ====== ESTADO ======
+const LS_KEY = "planIngles_v1";
+function load() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; }
+}
+function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+let state = load();
+state.dias = state.dias || {};       // "YYYY-MM-DD" -> [bool x6]
+state.semana = state.semana || {};   // weekKey -> { frases: n, ... }
+state.writing = state.writing || {}; // "YYYY-MM-DD" -> texto del writing
+state.recordatorio = state.recordatorio || { on: false, hora: "19:00" }; // aviso diario
+
+function hoyISO(d) {
+  d = d || new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+// índice de día de plan: lunes=0 ... domingo=6
+function planIndex(d) { return (d.getDay() + 6) % 7; }
+// clave de semana = fecha del lunes de esa semana
+function weekKey(d) {
+  d = d || new Date();
+  const lunes = new Date(d);
+  lunes.setDate(d.getDate() - planIndex(d));
+  return hoyISO(lunes);
+}
+// fecha real correspondiente al día seleccionado dentro de la semana actual
+function fechaDeDia(idx) {
+  const hoy = new Date();
+  const lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() - planIndex(hoy));
+  const f = new Date(lunes);
+  f.setDate(lunes.getDate() + idx);
+  return hoyISO(f);
+}
+
+let diaSel = planIndex(new Date());
+
+// ====== RENDER ======
+function checksDelDia(idx) {
+  const k = fechaDeDia(idx);
+  if (!state.dias[k]) state.dias[k] = [false,false,false,false,false,false];
+  return state.dias[k];
+}
+
+function renderTabs() {
+  const cont = document.getElementById("dayTabs");
+  cont.innerHTML = "";
+  const hoyIdx = planIndex(new Date());
+  PLAN.forEach((d, i) => {
+    const checks = checksDelDia(i);
+    const done = checks.filter(Boolean).length;
+    const b = document.createElement("button");
+    b.className = (i === diaSel ? "active " : "") + (done === 6 ? "complete" : "");
+    b.innerHTML = `${d.nombre}${i === hoyIdx ? " 📍" : ""}<span class="pct">${done}/6</span>`;
+    b.onclick = () => { diaSel = i; render(); };
+    cont.appendChild(b);
+  });
+}
+
+function renderDia() {
+  const d = PLAN[diaSel];
+  document.getElementById("dayTitle").textContent = `${d.nombre} — ${d.foco}`;
+  document.getElementById("dayGoal").textContent = "🎯 " + d.objetivo;
+
+  const checks = checksDelDia(diaSel);
+  const done = checks.filter(Boolean).length;
+  document.getElementById("dayProgress").style.width = (done/6*100) + "%";
+
+  const cont = document.getElementById("blocks");
+  cont.innerHTML = "";
+  d.bloques.forEach((b, i) => {
+    const div = document.createElement("div");
+    div.className = "block" + (checks[i] ? " done" : "");
+    div.innerHTML = `
+      <div class="block-head">
+        <input type="checkbox" ${checks[i] ? "checked" : ""} data-i="${i}">
+        <div class="block-info">
+          <div class="name">${i+1}. ${b.act}</div>
+          <div class="detail">${b.det}</div>
+        </div>
+        <span class="mins">${b.min} min</span>
+        <button class="timer-btn" data-t="${i}">▶ Timer</button>
+      </div>`;
+    div.querySelector("input").onchange = (e) => {
+      checks[i] = e.target.checked;
+      save(); render();
+    };
+    div.querySelector(".timer-btn").onclick = () => startTimer(b.min, `${d.nombre} · Bloque ${i+1}: ${b.act}`);
+    cont.appendChild(div);
+  });
+
+  document.getElementById("aiPrompt").textContent = d.prompt;
+  const ul = document.getElementById("prodList");
+  ul.innerHTML = "";
+  d.produccion.forEach(p => {
+    const li = document.createElement("li");
+    li.textContent = p;
+    ul.appendChild(li);
+  });
+
+  // Writing del día seleccionado (se guarda por fecha)
+  const wDate = fechaDeDia(diaSel);
+  const wa = document.getElementById("writingArea");
+  const wSaved = document.getElementById("writingSaved");
+  wa.value = (state.writing && state.writing[wDate]) || "";
+  wSaved.textContent = wa.value ? "Guardado ✓" : "";
+  wa.oninput = () => {
+    state.writing = state.writing || {};
+    if (wa.value.trim()) state.writing[wDate] = wa.value;
+    else delete state.writing[wDate];
+    save();
+    wSaved.textContent = "Guardado ✓";
+  };
+}
+
+function semanaActual() {
+  const k = weekKey();
+  if (!state.semana[k]) {
+    state.semana[k] = {};
+    GOALS.forEach(g => state.semana[k][g.id] = 0);
+  }
+  return state.semana[k];
+}
+
+function renderGoals() {
+  const sem = semanaActual();
+  document.getElementById("weekLabel").textContent = "(semana del " + weekKey() + ")";
+  const grid = document.getElementById("goalsGrid");
+  grid.innerHTML = "";
+  let cumplidas = 0;
+  GOALS.forEach(g => {
+    const val = sem[g.id] || 0;
+    const met = val >= g.meta;
+    if (met) cumplidas++;
+    const div = document.createElement("div");
+    div.className = "goal" + (met ? " met" : "");
+    div.innerHTML = `
+      <div>
+        <div class="g-name">${g.nombre}</div>
+        <div class="g-meta">${g.metaTxt}</div>
+      </div>
+      <div class="goal-ctrl">
+        <button data-d="-1">−</button>
+        <span class="val">${val}${met ? " ✓" : ""}</span>
+        <button data-d="1">+</button>
+      </div>`;
+    div.querySelectorAll("button").forEach(btn => {
+      btn.onclick = () => {
+        sem[g.id] = Math.max(0, (sem[g.id] || 0) + parseInt(btn.dataset.d));
+        save(); renderGoals();
+      };
+    });
+    grid.appendChild(div);
+  });
+  document.getElementById("weekSummary").textContent =
+    `Metas cumplidas: ${cumplidas}/${GOALS.length}. La métrica más importante: ¿puedes hablar 2 minutos en inglés sobre tu rutina, tu pasado y tus planes?`;
+}
+
+const UMBRAL_RACHA = 4; // un día "cuenta" para la racha con al menos 4 de 6 bloques (crédito parcial)
+function renderStreak() {
+  // racha = días consecutivos (hacia atrás desde hoy o ayer) con ≥ UMBRAL_RACHA bloques
+  let racha = 0;
+  const d = new Date();
+  const hoyActivo = (state.dias[hoyISO(d)] || []).filter(Boolean).length >= UMBRAL_RACHA;
+  if (!hoyActivo) d.setDate(d.getDate() - 1); // si hoy aún no llega al umbral, no rompe: cuenta desde ayer
+  while (true) {
+    const checks = state.dias[hoyISO(d)];
+    if (checks && checks.filter(Boolean).length >= UMBRAL_RACHA) { racha++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  document.getElementById("streak").textContent = racha > 0
+    ? `🔥 Racha: ${racha} día${racha > 1 ? "s" : ""} activos (≥${UMBRAL_RACHA}/6 bloques)`
+    : "";
+}
+
+function render() { renderTabs(); renderDia(); renderGoals(); renderStreak(); }
+
+// ====== COPIAR PROMPT ======
+document.getElementById("copyPrompt").onclick = function() {
+  navigator.clipboard.writeText(PLAN[diaSel].prompt).then(() => {
+    this.textContent = "¡Copiado! ✓"; this.classList.add("copied");
+    setTimeout(() => { this.textContent = "Copiar prompt"; this.classList.remove("copied"); }, 1600);
+  });
+};
+
+// ====== TIMER ======
+let timerInt = null, timerLeft = 0, timerPaused = false;
+function startTimer(min, label) {
+  clearInterval(timerInt);
+  timerLeft = min * 60; timerPaused = false;
+  document.getElementById("timerLabel").textContent = label;
+  document.getElementById("timerToggle").textContent = "Pausar";
+  document.getElementById("timerBar").classList.add("show");
+  tick();
+  timerInt = setInterval(tick, 1000);
+}
+function tick() {
+  if (timerPaused) return;
+  const m = Math.floor(timerLeft / 60), s = timerLeft % 60;
+  document.getElementById("timerClock").textContent = String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  document.title = (timerLeft > 0 ? `⏱ ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")} — ` : "") + "Mi Plan de Inglés";
+  if (timerLeft <= 0) {
+    clearInterval(timerInt);
+    document.getElementById("timerClock").textContent = "¡Listo! 🎉";
+    try { new AudioContext(); beep(); } catch {}
+    if (Notification && Notification.permission === "granted")
+      new Notification("⏱ Bloque terminado", { body: document.getElementById("timerLabel").textContent });
+    return;
+  }
+  timerLeft--;
+}
+function beep() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  [0, .3, .6].forEach(t => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; g.gain.setValueAtTime(.25, ctx.currentTime + t);
+    g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + t + .25);
+    o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + .25);
+  });
+}
+document.getElementById("timerToggle").onclick = function() {
+  timerPaused = !timerPaused;
+  this.textContent = timerPaused ? "Reanudar" : "Pausar";
+};
+document.getElementById("timerClose").onclick = () => {
+  clearInterval(timerInt);
+  document.getElementById("timerBar").classList.remove("show");
+  document.title = "Mi Plan de Inglés";
+};
+if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+
+// ====== RESET SEMANA ======
+document.getElementById("resetWeek").onclick = () => {
+  if (confirm("¿Reiniciar los contadores de esta semana y los checks de los días? (Empezar una semana nueva)")) {
+    state.semana[weekKey()] = {};
+    GOALS.forEach(g => state.semana[weekKey()][g.id] = 0);
+    for (let i = 0; i < 7; i++) state.dias[fechaDeDia(i)] = [false,false,false,false,false,false];
+    save(); render();
+  }
+};
+
+// ====== RECORDATORIO ======
+const remOn = document.getElementById("remOn");
+const remHora = document.getElementById("remHora");
+const remBanner = document.getElementById("remBanner");
+remOn.checked = !!state.recordatorio.on;
+remHora.value = state.recordatorio.hora || "19:00";
+remOn.onchange = () => {
+  state.recordatorio.on = remOn.checked; save();
+  if (remOn.checked && "Notification" in window && Notification.permission === "default") Notification.requestPermission();
+  checkRecordatorio();
+};
+remHora.onchange = () => { state.recordatorio.hora = remHora.value; state.recordatorio.lastNotif = null; save(); };
+remBanner.onclick = () => { remBanner.style.display = "none"; window.scrollTo(0, 0); };
+
+function checkRecordatorio() {
+  const hoy = hoyISO();
+  const completados = (state.dias[hoy] || []).filter(Boolean).length;
+  if (!state.recordatorio.on || completados === 6) { remBanner.style.display = "none"; return; }
+  const now = new Date();
+  const [h, m] = (state.recordatorio.hora || "19:00").split(":").map(Number);
+  const pasada = now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m);
+  if (!pasada) return;
+  remBanner.style.display = "block";
+  if (state.recordatorio.lastNotif !== hoy) {
+    state.recordatorio.lastNotif = hoy; save();
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("🇬🇧 Tu inglés de hoy", { body: `Te faltan ${6 - completados} bloque(s) por hacer hoy.` });
+    }
+  }
+}
+checkRecordatorio();
+setInterval(checkRecordatorio, 60000);
+
+// ====== EXPORTAR / IMPORTAR ======
+document.getElementById("exportIng").onclick = () => {
+  const blob = new Blob([JSON.stringify({ _app: "ingles", state }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ingles-respaldo-" + hoyISO() + ".json";
+  a.click();
+};
+document.getElementById("importIngBtn").onclick = () => document.getElementById("importIng").click();
+document.getElementById("importIng").addEventListener("change", function () {
+  const file = this.files && this.files[0];
+  this.value = "";
+  if (!file) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let d, nuevo = null;
+    try { d = JSON.parse(rd.result); } catch (e) { alert("El archivo no es válido."); return; }
+    if (d && d.state && d.state.dias) nuevo = d.state;                                   // respaldo de Inglés
+    else if (d && d.data && d.data.planIngles_v1) { try { nuevo = JSON.parse(d.data.planIngles_v1); } catch (e) {} } // respaldo global
+    else if (d && d.dias) nuevo = d;                                                      // estado directo
+    if (!nuevo || !nuevo.dias) { alert("El archivo no contiene un respaldo de Inglés."); return; }
+    if (!confirm("Esto reemplazará tu progreso de inglés actual. ¿Continuar?")) return;
+    state = nuevo;
+    state.dias = state.dias || {}; state.semana = state.semana || {};
+    state.writing = state.writing || {}; state.recordatorio = state.recordatorio || { on: false, hora: "19:00" };
+    save();
+    remOn.checked = !!state.recordatorio.on; remHora.value = state.recordatorio.hora || "19:00";
+    render(); if (typeof renderHistorial === "function") renderHistorial();
+  };
+  rd.readAsText(file);
+});
+
+// ====== HISTORIAL ======
+function dowFromISO(ds) {
+  const p = ds.split("-");
+  return (new Date(+p[0], +p[1] - 1, +p[2]).getDay() + 6) % 7;
+}
+function weekKeyOf(ds) {
+  const p = ds.split("-");
+  const d = new Date(+p[0], +p[1] - 1, +p[2]);
+  const lunes = new Date(d);
+  lunes.setDate(d.getDate() - planIndex(d));
+  return hoyISO(lunes);
+}
+function minutosDelDia(ds) {
+  const idx = dowFromISO(ds), checks = state.dias[ds] || [];
+  let min = 0;
+  checks.forEach((c, i) => { if (c && PLAN[idx].bloques[i]) min += PLAN[idx].bloques[i].min; });
+  return min;
+}
+
+function renderHistorial() {
+  const dates = Object.keys(state.dias).filter(ds => (state.dias[ds] || []).some(Boolean)).sort().reverse();
+  let totalMin = 0, completos = 0;
+  dates.forEach(ds => {
+    totalMin += minutosDelDia(ds);
+    if (state.dias[ds].filter(Boolean).length === 6) completos++;
+  });
+  // mejor racha de días completos consecutivos
+  const completeAsc = dates.filter(ds => state.dias[ds].filter(Boolean).length === 6).sort();
+  let maxStreak = 0, cur = 0, prev = null;
+  completeAsc.forEach(ds => {
+    const p = ds.split("-"), cur_d = new Date(+p[0], +p[1] - 1, +p[2]);
+    cur = (prev && (cur_d - prev) / 86400000 === 1) ? cur + 1 : 1;
+    if (cur > maxStreak) maxStreak = cur;
+    prev = cur_d;
+  });
+
+  document.getElementById("histStats").innerHTML = `
+    <div class="hist-stat"><div class="n">${dates.length}</div><div class="l">Días estudiados</div></div>
+    <div class="hist-stat"><div class="n">${completos}</div><div class="l">Días completos</div></div>
+    <div class="hist-stat"><div class="n">${Math.round(totalMin / 60)}h</div><div class="l">Tiempo total</div></div>
+    <div class="hist-stat"><div class="n">${maxStreak}</div><div class="l">Mejor racha</div></div>`;
+
+  const list = document.getElementById("histList");
+  if (!dates.length) {
+    list.innerHTML = `<div class="hist-empty">Aún no hay días registrados.<br>Marca tus bloques del día y aparecerán aquí. 📚</div>`;
+    return;
+  }
+  list.innerHTML = "";
+  let lastWeek = null;
+  dates.forEach(ds => {
+    const wk = weekKeyOf(ds);
+    if (wk !== lastWeek) {
+      lastWeek = wk;
+      const h = document.createElement("div");
+      h.className = "hist-week-h";
+      const wp = wk.split("-");
+      h.textContent = "Semana del " + wp[2] + "/" + wp[1] + "/" + wp[0];
+      list.appendChild(h);
+    }
+    const idx = dowFromISO(ds), checks = state.dias[ds], done = checks.filter(Boolean).length;
+    const full = done === 6, [y, m, d] = ds.split("-");
+    const item = document.createElement("div");
+    item.className = "hist-day-item" + (full ? " full" : "");
+    item.innerHTML = `
+      <div class="hist-day-top">
+        <div><span class="hist-day-name">${PLAN[idx].nombre}</span> <span class="hist-day-date">${d}/${m}/${y}</span></div>
+        <div class="hist-day-meta">${done}/6 · ${minutosDelDia(ds)} min${full ? " ✓" : ""}</div>
+      </div>
+      <div class="hist-bar"><div style="width:${done / 6 * 100}%"></div></div>`;
+    list.appendChild(item);
+  });
+}
+
+let currentView = "hoy";
+function switchView(v) {
+  currentView = v;
+  const hoy = v === "hoy";
+  document.getElementById("view-plan").style.display = hoy ? "" : "none";
+  document.getElementById("view-historial").style.display = hoy ? "none" : "";
+  document.getElementById("tab-hoy").classList.toggle("active", hoy);
+  document.getElementById("tab-hist").classList.toggle("active", !hoy);
+  if (!hoy) renderHistorial();
+  window.scrollTo(0, 0);
+}
+document.getElementById("tab-hoy").onclick = () => switchView("hoy");
+document.getElementById("tab-hist").onclick = () => switchView("hist");
+
+render();
+</script>
+</body>
+</html>

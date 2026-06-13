@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movilidad y Flexibilidad — Plan Semanal</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --card-hover: #f0f0f3;
+    --accent: #0071e3;
+    --accent-soft: #e8f1fd;
+    --text: #1d1d1f;
+    --text-dim: #86868b;
+    --border: rgba(0,0,0,0.08);
+    --done: #34c759;
+    --optional: #ff9500;
+    --radius: 18px;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1c1c1e;
+    --card: #2c2c2e;
+    --card-hover: #3a3a3c;
+    --accent: #0a84ff;
+    --accent-soft: rgba(10,132,255,0.18);
+    --text: #f5f5f7;
+    --text-dim: #98989d;
+    --border: rgba(255,255,255,0.1);
+    --done: #30d158;
+    --optional: #ff9f0a;
+  }
+  :root[data-theme="dark"] .video-card.done { background: rgba(48,209,88,0.18); border-color: rgba(48,209,88,0.4); }
+  :root[data-theme="dark"] .all-done { background: rgba(48,209,88,0.18); border-color: rgba(48,209,88,0.35); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+  header {
+    text-align: center;
+    padding: 32px 16px 20px;
+  }
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-dim); margin-top: 6px; font-size: 0.9rem; }
+
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 0 16px 20px;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 110px;
+  }
+  .stat .num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  .stat .lbl { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+  .week-nav {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 16px 24px;
+    flex-wrap: wrap;
+  }
+  .day-pill {
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text-dim);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .day-pill:hover { background: var(--card-hover); color: var(--text); }
+  .day-pill.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .day-pill.today::after {
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--optional);
+  }
+  .day-pill.complete:not(.active) { color: var(--done); border-color: rgba(79,195,161,0.4); }
+  .day-pill .check { font-size: 0.7rem; margin-left: 4px; }
+
+  main { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+
+  .day-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .day-header h2 { font-size: 1.2rem; }
+  .day-header .date { color: var(--text-dim); font-size: 0.85rem; }
+  .day-progress {
+    height: 6px;
+    background: var(--card);
+    border-radius: 3px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .day-progress .fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+
+  .video-card {
+    display: flex;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+    transition: all 0.15s;
+    align-items: center;
+  }
+  .video-card:hover { background: var(--card-hover); }
+  .video-card.done { border-color: rgba(52,199,89,0.4); background: #e9f9ee; }
+  .video-card.done .title { text-decoration: line-through; opacity: 0.7; }
+
+  .thumb {
+    flex-shrink: 0;
+    width: 120px;
+    height: 68px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+    display: block;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.25);
+    font-size: 1.6rem;
+    color: #fff;
+    opacity: 0.85;
+  }
+
+  .video-info { flex: 1; min-width: 0; }
+  .video-info .title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 6px;
+  }
+  .video-info .meta { font-size: 0.75rem; color: var(--text-dim); }
+  .tag-optional {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--optional);
+    border: 1px solid var(--optional);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-bottom: 4px;
+  }
+
+  .check-btn {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    color: transparent;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .check-btn:hover { border-color: var(--accent); }
+  .check-btn.checked {
+    background: var(--done);
+    border-color: var(--done);
+    color: #fff;
+  }
+
+  .all-done {
+    text-align: center;
+    padding: 18px;
+    background: #e9f9ee;
+    border: 1px solid rgba(52,199,89,0.35);
+    border-radius: var(--radius);
+    margin-top: 8px;
+    font-weight: 600;
+    color: var(--done);
+    display: none;
+  }
+  .all-done.show { display: block; animation: pop 0.3s ease; }
+  @keyframes pop {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .footer-actions {
+    text-align: center;
+    margin-top: 32px;
+  }
+  .footer-actions button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+  .footer-actions button:hover { color: #ff3b30; border-color: #ff3b30; }
+
+  @media (max-width: 480px) {
+    .thumb { width: 90px; height: 51px; }
+    .video-info .title { font-size: 0.82rem; }
+    .stat { min-width: 90px; padding: 10px 14px; }
+  }
+
+  /* ── Conmutador de vista e Historial ── */
+  .view-tabs { display: flex; gap: 6px; max-width: 680px; margin: 0 auto 18px; padding: 0 16px; }
+  .view-tabs button {
+    flex: 1; border: 1px solid var(--border); background: var(--card); color: var(--text-dim);
+    border-radius: 999px; padding: 9px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.15s;
+  }
+  .view-tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .hist-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+  .hist-item.complete { border-color: rgba(52,199,89,0.4); }
+  .hist-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .hist-day { font-weight: 600; }
+  .hist-date { color: var(--text-dim); font-size: 0.82rem; font-weight: 500; }
+  .hist-count { font-size: 0.82rem; color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .hist-item.complete .hist-count { color: var(--done); }
+  .hist-vids { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .hist-vid { font-size: 0.8rem; color: var(--text-dim); padding-left: 18px; position: relative; line-height: 1.35; }
+  .hist-vid::before { content: "✓"; position: absolute; left: 0; color: var(--done); }
+  .hist-empty { text-align: center; color: var(--text-dim); padding: 44px 16px; font-size: 0.9rem; }
+
+  /* miniatura como botón */
+  button.thumb { border: 0; padding: 0; cursor: pointer; }
+  .video-info .meta a { color: var(--accent); text-decoration: none; }
+
+  /* fila para registrar un día pasado */
+  .pick-row { max-width: 680px; margin: 0 auto 14px; padding: 0 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.82rem; color: var(--text-dim); }
+  .pick-row input[type=date] { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-family: inherit; font-size: 0.82rem; }
+  .pick-row #clearPick { background: var(--accent-soft); color: var(--accent); border: none; border-radius: 999px; padding: 6px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+
+  /* modal de video embebido */
+  .vid-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
+  .vid-box { width: 100%; max-width: 720px; }
+  .vid-frame { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 12px; overflow: hidden; background: #000; }
+  .vid-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .vid-close { margin-top: 12px; width: 100%; background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+</style>
+<script>
+/* Tema: sigue al sistema y permite que el hub lo imponga (postMessage). */
+(function(){
+  var el = document.documentElement, mq = matchMedia("(prefers-color-scheme: dark)");
+  if (!el.getAttribute("data-theme")) el.setAttribute("data-theme", mq.matches ? "dark" : "light");
+  mq.addEventListener("change", function(e){
+    if (el.getAttribute("data-theme-locked") !== "1") el.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+  window.addEventListener("message", function(ev){
+    if (ev.data && ev.data.type === "set-theme") { el.setAttribute("data-theme", ev.data.theme); el.setAttribute("data-theme-locked", "1"); }
+  });
+})();
+</script>
+</head>
+<body>
+
+<header>
+  <h1>🧘 Movilidad <span>&</span> Flexibilidad</h1>
+  <p>Tu plan semanal de sesiones</p>
+</header>
+
+<div class="view-tabs">
+  <button id="tab-plan" class="active">Esta semana</button>
+  <button id="tab-hist">Historial</button>
+</div>
+
+<div id="view-plan">
+<div class="stats">
+  <div class="stat"><div class="num" id="stat-streak">0</div><div class="lbl">🔥 Racha (días)</div></div>
+  <div class="stat"><div class="num" id="stat-week">0/7</div><div class="lbl">Días esta semana</div></div>
+  <div class="stat"><div class="num" id="stat-total">0</div><div class="lbl">Videos totales</div></div>
+</div>
+
+<div class="week-nav" id="week-nav"></div>
+
+<div class="pick-row">
+  <span>📅 Registrar otro día:</span>
+  <input type="date" id="pickDate">
+  <button id="clearPick" type="button" style="display:none;">Volver a esta semana</button>
+</div>
+
+<main>
+  <div class="day-header">
+    <h2 id="day-title"></h2>
+    <span class="date" id="day-date"></span>
+  </div>
+  <div class="day-progress"><div class="fill" id="day-fill" style="width:0%"></div></div>
+  <div id="video-list"></div>
+  <div class="all-done" id="all-done">✅ ¡Sesión completada! Buen trabajo.</div>
+
+  <div class="footer-actions">
+    <button onclick="exportarMov()">Exportar respaldo</button>
+    <button onclick="document.getElementById('movImport').click()">Importar respaldo</button>
+    <button onclick="resetAll()">Borrar todo</button>
+  </div>
+</main>
+</div>
+<input type="file" id="movImport" accept="application/json,.json" hidden>
+
+<div id="vidModal" class="vid-modal" style="display:none;">
+  <div class="vid-box">
+    <div class="vid-frame" id="vidFrame"></div>
+    <button class="vid-close" id="vidClose" type="button">Cerrar ✕</button>
+  </div>
+</div>
+
+<div id="view-historial" style="display:none">
+  <div class="stats" id="hist-stats"></div>
+  <main><div id="hist-list"></div></main>
+</div>
+
+<script>
+// ── Catálogo de videos ──────────────────────────────────────────
+const VIDEOS = {
+  A: { id: "ayey5zw2UJA", title: "Corregir la CABEZA ADELANTADA — 3 ejercicios que deberías hacer todos los días" },
+  B: { id: "GIUow-xGDaU", title: "Dolor de HOMBRO: 5 ejercicios para el manguito rotador" },
+  C: { id: "q642sAmp9FM", title: "10 MIN ESTIRAMIENTO CUERPO COMPLETO / AUMENTA FLEXIBILIDAD Y MOVILIDAD" },
+  D: { id: "xNXcOU8lM2s", title: "GANAR FLEXIBILIDAD | EJERCICIOS DE ESTIRAMIENTOS" },
+  E: { id: "_ez7xHGHG28", title: "Estiramiento cuerpo completo | Rutina diaria de ejercicios de estiramiento" }
+};
+
+// ── Distribución semanal (0 = Lunes ... 6 = Domingo) ────────────
+const PLAN = [
+  { name: "Lunes",     videos: [ {k:"A"}, {k:"B"}, {k:"C"} ] },
+  { name: "Martes",    videos: [ {k:"A"}, {k:"D"} ] },
+  { name: "Miércoles", videos: [ {k:"A"}, {k:"B"}, {k:"E"} ] },
+  { name: "Jueves",    videos: [ {k:"A"}, {k:"C"} ] },
+  { name: "Viernes",   videos: [ {k:"A"}, {k:"B"}, {k:"D"} ] },
+  { name: "Sábado",    videos: [ {k:"A"}, {k:"E"} ] },
+  { name: "Domingo",   videos: [ {k:"A"}, {k:"C", optional:true} ] }
+];
+
+const STORE_KEY = "movilidad-progress";
+const SHORT = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+
+let progress = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+let selectedDay = todayIndex(); // 0-6, lunes=0
+let overrideDate = null;        // fecha YYYY-MM-DD elegida a mano para registrar un día pasado
+
+function save() { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); }
+
+function todayIndex() { return (new Date().getDay() + 6) % 7; }
+
+// Fecha local en formato YYYY-MM-DD. Usamos la fecha local (no toISOString, que
+// convierte a UTC y, en husos negativos como México, adelanta un día por la tarde).
+function isoLocal(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+// Fecha (YYYY-MM-DD) del día `idx` de la semana actual
+function dateOfWeekDay(idx) {
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - todayIndex());
+  monday.setDate(monday.getDate() + idx);
+  return isoLocal(monday);
+}
+
+function getDone(dateStr) { return progress[dateStr] || []; }
+
+function toggle(dateStr, key) {
+  const done = getDone(dateStr);
+  const i = done.indexOf(key);
+  if (i >= 0) done.splice(i, 1); else done.push(key);
+  if (done.length) progress[dateStr] = done; else delete progress[dateStr];
+  save();
+  render();
+}
+
+// Día completo = todos los videos no opcionales hechos
+function isDayComplete(dayIdx, dateStr) {
+  const required = PLAN[dayIdx].videos.filter(v => !v.optional).map(v => v.k);
+  const done = getDone(dateStr);
+  return required.every(k => done.includes(k));
+}
+
+function computeStreak() {
+  let streak = 0;
+  const d = new Date();
+  // Si hoy aún no está completo, no rompe la racha: empezamos a contar desde ayer
+  const todayStr = isoLocal(d);
+  if (isDayComplete(todayIndex(), todayStr)) streak++;
+  for (let i = 1; i < 3650; i++) {
+    const day = new Date();
+    day.setDate(day.getDate() - i);
+    const ds = isoLocal(day);
+    const idx = (day.getDay() + 6) % 7;
+    if (isDayComplete(idx, ds)) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function render() {
+  // Día activo: el del calendario semanal, o uno pasado elegido a mano (overrideDate)
+  const dateStr = overrideDate || dateOfWeekDay(selectedDay);
+  const activeIdx = overrideDate ? dowFromDate(overrideDate) : selectedDay;
+
+  // ── Navegación de días ──
+  const nav = document.getElementById("week-nav");
+  nav.innerHTML = "";
+  for (let i = 0; i < 7; i++) {
+    const ds = dateOfWeekDay(i);
+    const pill = document.createElement("button");
+    pill.className = "day-pill";
+    if (!overrideDate && i === selectedDay) pill.classList.add("active");
+    if (i === todayIndex()) pill.classList.add("today");
+    const complete = isDayComplete(i, ds);
+    if (complete) pill.classList.add("complete");
+    pill.innerHTML = SHORT[i] + (complete ? '<span class="check">✓</span>' : "");
+    pill.onclick = () => { selectedDay = i; overrideDate = null; syncPick(); render(); };
+    nav.appendChild(pill);
+  }
+
+  // ── Día seleccionado ──
+  const day = PLAN[activeIdx];
+  const done = getDone(dateStr);
+
+  const isToday = !overrideDate && selectedDay === todayIndex();
+  document.getElementById("day-title").textContent = day.name + (isToday ? " · Hoy" : (overrideDate ? " · día pasado" : ""));
+  const [y, m, d] = dateStr.split("-");
+  document.getElementById("day-date").textContent = `${d}/${m}/${y}`;
+
+  const list = document.getElementById("video-list");
+  list.innerHTML = "";
+  day.videos.forEach(v => {
+    const video = VIDEOS[v.k];
+    const isDone = done.includes(v.k);
+    const card = document.createElement("div");
+    card.className = "video-card" + (isDone ? " done" : "");
+    card.innerHTML = `
+      <button type="button" class="thumb" title="Reproducir aquí">
+        <img src="https://img.youtube.com/vi/${video.id}/mqdefault.jpg" alt="" loading="lazy">
+        <span class="play">▶</span>
+      </button>
+      <div class="video-info">
+        ${v.optional ? '<span class="tag-optional">Opcional · si te sientes rígido</span><br>' : ""}
+        <div class="title">${video.title}</div>
+        <div class="meta">Toca la miniatura para verlo aquí · <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener">YouTube ↗</a></div>
+      </div>
+      <button class="check-btn${isDone ? " checked" : ""}" title="Marcar como hecho">✓</button>
+    `;
+    card.querySelector(".thumb").onclick = () => openVideo(video.id, video.title);
+    card.querySelector(".check-btn").onclick = () => toggle(dateStr, v.k);
+    list.appendChild(card);
+  });
+
+  // ── Barra de progreso del día ──
+  const requiredCount = day.videos.length;
+  const doneCount = day.videos.filter(v => done.includes(v.k)).length;
+  document.getElementById("day-fill").style.width = (requiredCount ? (doneCount / requiredCount) * 100 : 0) + "%";
+  document.getElementById("all-done").classList.toggle("show", isDayComplete(activeIdx, dateStr));
+
+  // ── Estadísticas ──
+  let weekDays = 0;
+  for (let i = 0; i < 7; i++) if (isDayComplete(i, dateOfWeekDay(i))) weekDays++;
+  const totalVideos = Object.values(progress).reduce((s, arr) => s + arr.length, 0);
+  document.getElementById("stat-streak").textContent = computeStreak();
+  document.getElementById("stat-week").textContent = weekDays + "/7";
+  document.getElementById("stat-total").textContent = totalVideos;
+}
+
+function resetAll() {
+  if (confirm("¿Seguro que quieres borrar todo el historial de sesiones?")) {
+    progress = {};
+    save();
+    render();
+    if (currentView === "hist") renderHistorial();
+  }
+}
+
+// ── Historial ──
+const DAY_FULL = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+function dowFromDate(ds) {
+  const p = ds.split("-");
+  return (new Date(+p[0], +p[1] - 1, +p[2]).getDay() + 6) % 7;
+}
+
+function renderHistorial() {
+  const dates = Object.keys(progress).filter(ds => (progress[ds] || []).length).sort().reverse();
+  let completos = 0, totalVideos = 0;
+  dates.forEach(ds => {
+    const idx = dowFromDate(ds);
+    totalVideos += progress[ds].length;
+    if (isDayComplete(idx, ds)) completos++;
+  });
+  document.getElementById("hist-stats").innerHTML = `
+    <div class="stat"><div class="num">${dates.length}</div><div class="lbl">Días con sesión</div></div>
+    <div class="stat"><div class="num">${completos}</div><div class="lbl">Días completos</div></div>
+    <div class="stat"><div class="num">${totalVideos}</div><div class="lbl">Videos totales</div></div>`;
+
+  const list = document.getElementById("hist-list");
+  if (!dates.length) {
+    list.innerHTML = `<div class="hist-empty">Aún no has completado ninguna sesión.<br>Marca tus primeros videos y aparecerán aquí. 🧘</div>`;
+    return;
+  }
+  list.innerHTML = "";
+  dates.forEach(ds => {
+    const idx = dowFromDate(ds);
+    const done = progress[ds];
+    const total = PLAN[idx].videos.length;
+    const complete = isDayComplete(idx, ds);
+    const [y, m, d] = ds.split("-");
+    const vids = done.map(k => VIDEOS[k] ? `<div class="hist-vid">${VIDEOS[k].title}</div>` : "").join("");
+    const item = document.createElement("div");
+    item.className = "hist-item" + (complete ? " complete" : "");
+    item.innerHTML = `
+      <div class="hist-row">
+        <div class="hist-day">${DAY_FULL[idx]} <span class="hist-date">${d}/${m}/${y}</span></div>
+        <div class="hist-count">${done.length}/${total} videos${complete ? " ✓" : ""}</div>
+      </div>
+      <div class="hist-vids">${vids}</div>`;
+    list.appendChild(item);
+  });
+}
+
+let currentView = "plan";
+function switchView(v) {
+  currentView = v;
+  const isPlan = v === "plan";
+  document.getElementById("view-plan").style.display = isPlan ? "" : "none";
+  document.getElementById("view-historial").style.display = isPlan ? "none" : "";
+  document.getElementById("tab-plan").classList.toggle("active", isPlan);
+  document.getElementById("tab-hist").classList.toggle("active", !isPlan);
+  if (!isPlan) renderHistorial();
+  window.scrollTo(0, 0);
+}
+document.getElementById("tab-plan").onclick = () => switchView("plan");
+document.getElementById("tab-hist").onclick = () => switchView("hist");
+
+// ── Registrar un día pasado ──
+const pickInput = document.getElementById("pickDate");
+const clearPickBtn = document.getElementById("clearPick");
+pickInput.max = isoLocal(new Date());
+function syncPick() {
+  pickInput.value = overrideDate || "";
+  clearPickBtn.style.display = overrideDate ? "" : "none";
+}
+pickInput.onchange = () => {
+  if (pickInput.value) { overrideDate = pickInput.value; selectedDay = dowFromDate(overrideDate); clearPickBtn.style.display = ""; render(); }
+};
+clearPickBtn.onclick = () => { overrideDate = null; selectedDay = todayIndex(); syncPick(); render(); };
+
+// ── Reproductor de video embebido ──
+function openVideo(id, title) {
+  document.getElementById("vidFrame").innerHTML =
+    `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen title="${(title || "").replace(/"/g, "")}"></iframe>`;
+  document.getElementById("vidModal").style.display = "flex";
+}
+function closeVideo() {
+  document.getElementById("vidFrame").innerHTML = "";
+  document.getElementById("vidModal").style.display = "none";
+}
+document.getElementById("vidClose").onclick = closeVideo;
+document.getElementById("vidModal").onclick = (e) => { if (e.target.id === "vidModal") closeVideo(); };
+
+// ── Exportar / importar respaldo ──
+function exportarMov() {
+  const blob = new Blob([JSON.stringify({ _app: "movilidad", progress }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "movilidad-respaldo-" + isoLocal(new Date()) + ".json";
+  a.click();
+}
+function importarMov(file) {
+  const rd = new FileReader();
+  rd.onload = () => {
+    let d;
+    try { d = JSON.parse(rd.result); } catch (e) { alert("El archivo no es válido."); return; }
+    let prog = null;
+    if (d && d.progress && typeof d.progress === "object") prog = d.progress;                       // respaldo de Movilidad
+    else if (d && d.data && d.data["movilidad-progress"]) { try { prog = JSON.parse(d.data["movilidad-progress"]); } catch (e) {} } // respaldo global Mi Diario
+    else if (d && typeof d === "object" && !d._app && !d.data) prog = d;                              // objeto progress directo
+    if (!prog || typeof prog !== "object") { alert("El archivo no contiene un respaldo de Movilidad."); return; }
+    if (!confirm("Esto reemplazará tu progreso de movilidad actual. ¿Continuar?")) return;
+    progress = prog; save(); render();
+    if (currentView === "hist") renderHistorial();
+  };
+  rd.readAsText(file);
+}
+document.getElementById("movImport").addEventListener("change", function () {
+  if (this.files && this.files[0]) importarMov(this.files[0]);
+  this.value = "";
+});
+
+render();
+</script>
+</body>
+</html>

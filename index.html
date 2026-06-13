@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>Mi Diario</title>
+<meta name="theme-color" content="#f5f5f7">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="To-do/icon-192.png">
+<link rel="apple-touch-icon" href="To-do/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mi Diario">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --text: #1d1d1f;
+    --text-secondary: #86868b;
+    --accent: #0071e3;
+    --accent-soft: #e8f1fd;
+    --green: #34c759;
+    --green-soft: #e9f9ee;
+    --orange: #ff9500;
+    --border: rgba(0,0,0,0.06);
+    --soft: rgba(118,118,128,0.10);
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.05);
+    --radius: 18px;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1c1c1e;
+    --card: #2c2c2e;
+    --text: #f5f5f7;
+    --text-secondary: #98989d;
+    --accent: #0a84ff;
+    --accent-soft: rgba(10,132,255,0.18);
+    --green: #30d158;
+    --green-soft: rgba(48,209,88,0.18);
+    --orange: #ff9f0a;
+    --border: rgba(255,255,255,0.08);
+    --soft: rgba(118,118,128,0.20);
+    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.25);
+  }
+  :root[data-theme="dark"] header.shell { background: rgba(28,28,30,0.85); }
+  :root[data-theme="dark"] .seg { background: rgba(118,118,128,0.24); }
+  :root[data-theme="dark"] .seg button.active { background: #636366; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Barra superior con selector de secciones ---------- */
+  header.shell {
+    flex-shrink: 0;
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background: rgba(245,245,247,0.85);
+    border-bottom: 1px solid var(--border);
+    padding: max(10px, env(safe-area-inset-top)) 14px 10px;
+  }
+  .seg {
+    display: flex;
+    max-width: 760px;
+    margin: 0 auto;
+    background: rgba(118,118,128,0.12);
+    border-radius: 13px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .seg button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 9px 4px 7px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    line-height: 1;
+  }
+  .seg button .ico { font-size: 17px; line-height: 1; }
+  .seg button.active {
+    background: var(--card);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    font-weight: 600;
+  }
+
+  /* ---------- Contenedor de iframes ---------- */
+  .frames {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+  .frames iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: var(--bg);
+  }
+  .frames iframe.hidden { display: none; }
+
+  /* Pantalla de carga inicial */
+  .splash {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    background: var(--bg);
+    z-index: 5;
+  }
+  .splash.gone { display: none; }
+
+  /* ---------- Panel nativo (Hoy) ---------- */
+  .panel {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg);
+  }
+  .panel.hidden { display: none; }
+  .dash {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 26px 18px calc(40px + env(safe-area-inset-bottom));
+  }
+  .dash-greet { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .dash-date { color: var(--text-secondary); font-size: 14px; margin-top: 3px; text-transform: capitalize; }
+  .dash-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+    margin-top: 22px;
+  }
+  .dcard {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    text-align: left;
+    font-family: inherit;
+    color: var(--text);
+  }
+  .dcard:hover { transform: translateY(-2px); box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 10px 28px rgba(0,0,0,0.09); }
+  .dcard-top { display: flex; align-items: center; gap: 11px; }
+  .dcard-ico {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    background: var(--soft);
+    flex-shrink: 0;
+  }
+  .dcard-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .dcard-status { font-size: 14px; color: var(--text-secondary); line-height: 1.4; }
+  .dcard-status strong { color: var(--text); font-weight: 600; }
+  .dbadge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12.5px; font-weight: 600;
+    padding: 5px 11px; border-radius: 100px;
+    align-self: flex-start;
+  }
+  .dbadge.pend { background: var(--accent-soft); color: var(--accent); }
+  .dbadge.done { background: var(--green-soft); color: var(--green); }
+  .dbadge.rest { background: var(--soft); color: var(--text-secondary); }
+  .dprog { height: 7px; background: var(--soft); border-radius: 100px; overflow: hidden; }
+  .dprog > div { height: 100%; background: var(--accent); border-radius: 100px; transition: width .35s ease; }
+  .dprog > div.full { background: var(--green); }
+  .dash-h {
+    font-size: 12.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-secondary); margin: 30px 2px 12px;
+  }
+  .backup-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+  }
+  .backup-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .backup-btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .backup-btns button {
+    flex: 1; min-width: 130px; border: none; border-radius: 12px;
+    padding: 12px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s ease;
+  }
+  .btn-fill { background: var(--accent); color: #fff; }
+  .btn-soft { background: var(--soft); color: var(--text); }
+  .toast {
+    position: fixed; left: 50%; bottom: 30px;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg);
+    padding: 11px 20px; border-radius: 100px;
+    font-size: 14px; font-weight: 600;
+    opacity: 0; pointer-events: none;
+    transition: all .25s ease; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="shell">
+  <div class="seg" id="seg">
+    <button data-key="hoy"       class="active"><span class="ico">🏠</span>Hoy</button>
+    <button data-key="tareas"><span class="ico">✅</span>Tareas</button>
+    <button data-key="ejercicio"><span class="ico">🏋️</span>Ejercicio</button>
+    <button data-key="movilidad"><span class="ico">🧘</span>Movilidad</button>
+    <button data-key="ingles"><span class="ico">🇬🇧</span>Inglés</button>
+  </div>
+</header>
+
+<div class="frames" id="frames">
+  <div class="splash gone" id="splash">Cargando…</div>
+  <div class="panel" id="panel-hoy"><div class="dash" id="dash"></div></div>
+  <iframe data-key="tareas"    data-src="To-do/index.html"                  title="Tareas"    class="hidden"></iframe>
+  <iframe data-key="ejercicio" data-src="Ejercicio/entrenamientos.html"     title="Ejercicio" class="hidden"></iframe>
+  <iframe data-key="movilidad" data-src="Movilidad/index.html"              title="Movilidad" class="hidden"></iframe>
+  <iframe data-key="ingles"    data-src="plan%20ingles/estudio-ingles.html" title="Inglés"    class="hidden"></iframe>
+</div>
+
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var STORE = "hub-section";
+  var frames = Array.prototype.slice.call(document.querySelectorAll("#frames iframe"));
+  var buttons = Array.prototype.slice.call(document.querySelectorAll("#seg button"));
+  var splash = document.getElementById("splash");
+  var loaded = {};
+
+  /* ---------- Tema: todas las secciones siguen el de To-do ----------
+     To-do guarda su preferencia (auto/claro/oscuro) en localStorage["todo-theme"].
+     El shell calcula el tema efectivo y lo propaga a cada iframe. */
+  var THEME_KEY = "todo-theme";
+  var darkMq = window.matchMedia("(prefers-color-scheme: dark)");
+  function effectiveTheme() {
+    var pref = "auto";
+    try { pref = localStorage.getItem(THEME_KEY) || "auto"; } catch (e) {}
+    return pref === "auto" ? (darkMq.matches ? "dark" : "light") : pref;
+  }
+  function pushTheme(f, eff) {
+    /* Inyección directa al DOM (funciona en http, mismo origen). */
+    try { if (f.contentDocument && f.contentDocument.documentElement) f.contentDocument.documentElement.setAttribute("data-theme", eff); } catch (e) {}
+    /* postMessage: canal que cruza marcos incluso al abrir como archivo (file://). */
+    try { if (f.contentWindow) f.contentWindow.postMessage({ type: "set-theme", theme: eff }, "*"); } catch (e) {}
+  }
+  function applyTheme() {
+    var eff = effectiveTheme();
+    document.documentElement.setAttribute("data-theme", eff);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", eff === "dark" ? "#1c1c1e" : "#f5f5f7");
+    frames.forEach(function (f) { pushTheme(f, eff); });
+  }
+  darkMq.addEventListener("change", applyTheme);
+  /* Cuando To-do cambia su tema, escribe en localStorage y dispara 'storage' en el resto. */
+  window.addEventListener("storage", function (e) {
+    if (!e || e.key === THEME_KEY) applyTheme();
+    /* Si el panel Hoy está visible y una sección cambió sus datos, refréscalo. */
+    if (!panelHoy.classList.contains("hidden")) renderDash();
+  });
+
+  /* ---------- Pantalla "Hoy" (dashboard) + Respaldo ----------
+     En el mismo origen (http/https), el shell comparte localStorage con los
+     iframes, así que puede leer los datos de las cuatro secciones directamente. */
+  var panelHoy = document.getElementById("panel-hoy");
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function weekdayIdx() { return (new Date().getDay() + 6) % 7; } // lunes = 0
+  function safeParse(key, def) { try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : def; } catch (e) { return def; } }
+
+  var DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  var MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  var MOV_REQUIRED = [3, 2, 3, 2, 3, 2, 1]; // videos obligatorios por día (lun→dom)
+
+  function ejWeek(cfg) {
+    if (cfg.week) return cfg.week;
+    if (cfg.startDate) {
+      var ini = new Date(cfg.startDate + "T00:00:00");
+      var dias = Math.floor((Date.now() - ini.getTime()) / 86400000);
+      return dias < 0 ? 1 : Math.min(12, Math.floor(dias / 7) + 1);
+    }
+    return 1;
+  }
+  function mondayDate() {
+    var d = new Date(); var m = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    m.setDate(m.getDate() - weekdayIdx());
+    return m;
+  }
+
+  function renderDash() {
+    var now = new Date(), t = todayStr();
+    var hour = now.getHours();
+    var saludo = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
+    var fecha = DIAS[now.getDay()] + ", " + now.getDate() + " de " + MESES[now.getMonth()];
+
+    // ----- Tareas -----
+    var todo = safeParse("todo-app-v1", { tasks: [] }), tasks = todo.tasks || [], seen = {}, tp = 0;
+    tasks.forEach(function (x) {
+      if (x.done) return;
+      var hit = (x.category === "daily") || (x.due && x.due <= t);
+      if (hit && !seen[x.id]) { seen[x.id] = 1; tp++; }
+    });
+    var cTareas = card("tareas", "✅", "Tareas",
+      tp ? "Tienes <strong>" + tp + "</strong> tarea" + (tp > 1 ? "s" : "") + " para hoy" : "No tienes tareas pendientes para hoy. 🎉",
+      tp ? badge("pend", tp + " pendiente" + (tp > 1 ? "s" : "")) : badge("done", "Al día ✓"), "");
+
+    // ----- Ejercicio -----
+    var cfg = safeParse("entreno_cfg_v1", {}), hist = safeParse("entreno_historial_v1", []), draft = safeParse("entreno_draft_v1", null);
+    var week = ejWeek(cfg), mon = mondayDate();
+    var ejToday = hist.some(function (s) { return (s.fecha || "").slice(0, 10) === t; });
+    var ejWeekN = hist.filter(function (s) { return new Date(s.fecha) >= mon; }).length;
+    var ejStatus, ejBadge;
+    if (draft) { ejStatus = "Tienes una <strong>sesión en curso</strong> sin terminar"; ejBadge = badge("pend", "En curso"); }
+    else if (ejToday) { ejStatus = "Semana <strong>" + week + "/12</strong> · " + ejWeekN + " esta semana"; ejBadge = badge("done", "Entrenado hoy ✓"); }
+    else { ejStatus = "Semana <strong>" + week + "/12</strong> · " + ejWeekN + " entrenamiento" + (ejWeekN === 1 ? "" : "s") + " esta semana"; ejBadge = badge("pend", "Sin entrenar hoy"); }
+    var cEjercicio = card("ejercicio", "🏋️", "Ejercicio", ejStatus, ejBadge, "");
+
+    // ----- Movilidad -----
+    var mov = safeParse("movilidad-progress", {}), mreq = MOV_REQUIRED[weekdayIdx()];
+    var mdone = Math.min((mov[t] || []).length, mreq);
+    var mFull = mdone >= mreq;
+    var cMovilidad = card("movilidad", "🧘", "Movilidad",
+      "Sesión de hoy: <strong>" + mdone + "/" + mreq + "</strong> videos",
+      mFull ? badge("done", "Completo ✓") : badge("pend", (mreq - mdone) + " video" + (mreq - mdone > 1 ? "s" : "")),
+      prog(mdone, mreq));
+
+    // ----- Inglés -----
+    var ing = safeParse("planIngles_v1", { dias: {} });
+    var ichecks = (ing.dias && ing.dias[t]) || [], idone = ichecks.filter(Boolean).length;
+    var iFull = idone >= 6;
+    var cIngles = card("ingles", "🇬🇧", "Inglés",
+      "Bloques de hoy: <strong>" + idone + "/6</strong>",
+      iFull ? badge("done", "Completo ✓") : badge("pend", (6 - idone) + " bloque" + (6 - idone > 1 ? "s" : "")),
+      prog(idone, 6));
+
+    document.getElementById("dash").innerHTML =
+      '<div class="dash-greet">' + saludo + "</div>" +
+      '<div class="dash-date">' + fecha + "</div>" +
+      '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>" +
+      '<div class="dash-h">Datos y respaldo</div>' +
+      '<div class="backup-card">' +
+        "<p>Tu progreso se guarda solo en este dispositivo. Exporta un respaldo de las cuatro secciones y guárdalo a salvo; podrás importarlo en otro dispositivo o si reinstalas.</p>" +
+        '<div class="backup-btns">' +
+          '<button class="btn-fill" id="btnExport">⬇ Exportar respaldo</button>' +
+          '<button class="btn-soft" id="btnImport">⬆ Importar respaldo</button>' +
+        "</div>" +
+      "</div>";
+
+    Array.prototype.slice.call(document.querySelectorAll(".dcard[data-go]")).forEach(function (el) {
+      el.addEventListener("click", function () { show(el.getAttribute("data-go")); });
+    });
+    document.getElementById("btnExport").addEventListener("click", exportAll);
+    document.getElementById("btnImport").addEventListener("click", function () { document.getElementById("importFile").click(); });
+  }
+
+  function card(go, ico, title, statusHtml, badgeHtml, progHtml) {
+    return '<button class="dcard" data-go="' + go + '">' +
+      '<div class="dcard-top"><div class="dcard-ico">' + ico + '</div><div class="dcard-title">' + title + "</div></div>" +
+      '<div class="dcard-status">' + statusHtml + "</div>" +
+      progHtml + badgeHtml +
+      "</button>";
+  }
+  function badge(cls, txt) { return '<span class="dbadge ' + cls + '">' + txt + "</span>"; }
+  function prog(done, total) {
+    var pct = total ? Math.round(done / total * 100) : 0;
+    return '<div class="dprog"><div class="' + (done >= total ? "full" : "") + '" style="width:' + pct + '%"></div></div>';
+  }
+
+  /* ---------- Respaldo: exporta/importa TODO el localStorage del origen ---------- */
+  function exportAll() {
+    var data = {};
+    for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); data[k] = localStorage.getItem(k); }
+    var payload = { _app: "mi-diario-backup", _version: 1, _date: new Date().toISOString(), data: data };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "mi-diario-respaldo-" + todayStr() + ".json";
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    toast("Respaldo exportado");
+  }
+  document.getElementById("importFile").addEventListener("change", function () {
+    var file = this.files && this.files[0];
+    if (file) importAll(file);
+    this.value = "";
+  });
+  function importAll(file) {
+    var rd = new FileReader();
+    rd.onload = function () {
+      var data;
+      try { var p = JSON.parse(rd.result); data = (p && p.data) ? p.data : p; } catch (e) { data = null; }
+      if (!data || typeof data !== "object") { alert("El archivo no es un respaldo válido de Mi Diario."); return; }
+      if (!confirm("Esto reemplazará los datos actuales de las cuatro secciones con los del respaldo. ¿Continuar?")) return;
+      Object.keys(data).forEach(function (k) { try { localStorage.setItem(k, data[k]); } catch (e) {} });
+      toast("Respaldo importado");
+      reloadFrames();
+      applyTheme();
+      renderDash();
+    };
+    rd.readAsText(file);
+  }
+  function reloadFrames() {
+    frames.forEach(function (f) {
+      if (loaded[f.dataset.key]) {
+        try { f.contentWindow.location.reload(); } catch (e) { f.src = f.dataset.src; }
+      }
+    });
+  }
+  function toast(msg) {
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.classList.remove("show"); }, 2200);
+  }
+
+  function show(key) {
+    buttons.forEach(function (b) { b.classList.toggle("active", b.dataset.key === key); });
+    var isHoy = key === "hoy";
+    panelHoy.classList.toggle("hidden", !isHoy);
+    frames.forEach(function (f) {
+      var active = !isHoy && f.dataset.key === key;
+      f.classList.toggle("hidden", !active);
+      if (active && !loaded[key]) {            // carga perezosa la primera vez
+        loaded[key] = true;
+        f.addEventListener("load", function () {
+          splash.classList.add("gone");
+          pushTheme(f, effectiveTheme());
+        }, { once: true });
+        f.src = f.dataset.src;
+      } else if (active) {
+        pushTheme(f, effectiveTheme());
+      }
+    });
+    if (isHoy) { splash.classList.add("gone"); renderDash(); }
+    else if (loaded[key]) splash.classList.add("gone");
+    else splash.classList.remove("gone");
+    try { localStorage.setItem(STORE, key); } catch (e) {}
+  }
+
+  buttons.forEach(function (b) {
+    b.addEventListener("click", function () { show(b.dataset.key); });
+  });
+
+  var start = "hoy";
+  try { var saved = localStorage.getItem(STORE); if (saved) start = saved; } catch (e) {}
+  var valid = start === "hoy" || frames.some(function (f) { return f.dataset.key === start; });
+  if (!valid) start = "hoy";
+  applyTheme();
+  show(start);
+
+  if ("serviceWorker" in navigator) {
+    var refreshing = false;
+    /* Cuando un service worker nuevo toma el control, recarga una vez para
+       servir los archivos actualizados (evita quedarse con caché vieja). */
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (refreshing) return;
+      refreshing = true;
+      location.reload();
+    });
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").then(function (reg) {
+        reg.update();
+      }).catch(function () {});
+    });
+  }
+})();
+</script>
+</body>
+</html>

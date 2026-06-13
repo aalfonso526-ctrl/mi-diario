@@ -1,0 +1,21 @@
+# Configuración real de Firebase (claves del proyecto): no versionar.
+# El repo guarda solo la plantilla To-do/firebase-config.js con valor null.
+firebase-config.local.js
+.firebase/
+firebase-debug.log
+
+# Sistema operativo
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Editores
+.vscode/
+*.swp
+*~
+
+# Respaldos exportados desde la app
+mi-diario-respaldo-*.json
+movilidad-respaldo-*.json
+*-respaldo-*.json

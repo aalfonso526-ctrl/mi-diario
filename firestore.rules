@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Reglas de seguridad de Cloud Firestore para "Mi Diario".
+//
+// Modelo de datos: cada usuario guarda TODO su estado en un único documento
+//   users/{uid}
+// donde {uid} es el UID de Firebase Auth de ese usuario (ver pushState()
+// en To-do/index.html: collection("users").doc(cloud.user.uid)).
+//
+// Principio: un documento solo es accesible por su dueño autenticado.
+// Sin estas reglas, cualquier usuario con sesión iniciada podría leer y
+// escribir los datos de cualquier otro. La apiKey de Firebase es pública
+// por diseño: estas reglas son la ÚNICA barrera real de seguridad.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Documento personal de cada usuario.
+    match /users/{userId} {
+      // Solo el dueño autenticado puede leer o escribir su propio documento.
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // Todo lo demás queda denegado por defecto.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

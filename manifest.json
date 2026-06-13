@@ -1,0 +1,15 @@
+{
+  "name": "Mi Diario",
+  "short_name": "Diario",
+  "description": "Tareas, ejercicio, movilidad e inglés en un solo lugar",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f5f7",
+  "theme_color": "#f5f5f7",
+  "icons": [
+    { "src": "To-do/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "To-do/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

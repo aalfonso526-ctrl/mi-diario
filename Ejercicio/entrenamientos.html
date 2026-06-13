@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Plan de Entrenamiento — 12 Semanas</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f5f5f7; --card:#ffffff; --card2:#eef0f3; --border:rgba(0,0,0,0.08);
+    --text:#1d1d1f; --muted:#86868b; --accent:#0071e3; --accent2:#34c759;
+    --warn:#ff9500; --danger:#ff3b30;
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#1c1c1e; --card:#2c2c2e; --card2:#3a3a3c; --border:rgba(255,255,255,0.1);
+    --text:#f5f5f7; --muted:#98989d; --accent:#0a84ff; --accent2:#30d158;
+    --warn:#ff9f0a; --danger:#ff453a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); padding-bottom:90px;}
+  header{padding:18px 16px 10px; text-align:center;}
+  header h1{font-size:1.25rem;}
+  header .sub{color:var(--muted); font-size:.85rem; margin-top:4px;}
+  .wrap{max-width:760px; margin:0 auto; padding:0 12px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin:12px 0;}
+  .card h2{font-size:1.05rem; margin-bottom:10px;}
+  .card h3{font-size:.95rem; margin:10px 0 6px;}
+  .muted{color:var(--muted); font-size:.85rem;}
+  .pill{display:inline-block; background:var(--card2); border:1px solid var(--border); border-radius:999px; padding:3px 10px; font-size:.78rem; color:var(--muted); margin:2px;}
+  .pill.acc{color:var(--accent2); border-color:var(--accent2);}
+  table{width:100%; border-collapse:collapse; font-size:.85rem;}
+  th,td{padding:6px 8px; text-align:left; border-bottom:1px solid var(--border);}
+  th{color:var(--muted); font-weight:600; font-size:.78rem; text-transform:uppercase;}
+  tr:last-child td{border-bottom:none;}
+  button{font-family:inherit; cursor:pointer; border:none; border-radius:10px; font-size:.9rem;}
+  .btn{background:var(--accent); color:#fff; padding:10px 16px; font-weight:600;}
+  .btn.green{background:var(--accent2); color:#fff;}
+  .btn.ghost{background:var(--card2); color:var(--text); border:1px solid var(--border);}
+  .btn.danger{background:transparent; color:var(--danger); border:1px solid var(--danger);}
+  .btn.small{padding:6px 10px; font-size:.8rem;}
+  .btn:active{transform:scale(.97);}
+  select,input[type=number],input[type=text],input[type=date],textarea{
+    background:var(--card2); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:8px; font-size:.9rem; font-family:inherit;
+  }
+  input[type=number]{width:70px; text-align:center;}
+  /* nav */
+  nav{position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border);
+      display:flex; justify-content:space-around; padding:8px 4px calc(8px + env(safe-area-inset-bottom)); z-index:50;}
+  nav button{background:none; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:2px; font-size:.7rem; padding:4px 10px;}
+  nav button .ico{font-size:1.25rem;}
+  nav button.active{color:var(--accent);}
+  .tab{display:none;}
+  .tab.active{display:block;}
+  /* semana selector */
+  .week-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .fase-badge{font-weight:700; color:var(--accent2);}
+  /* rutinas */
+  .rut-head{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
+  /* sesión */
+  .ej-card{background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:12px; margin:10px 0;}
+  .ej-card h4{font-size:.95rem; margin-bottom:2px;}
+  .ej-meta{font-size:.78rem; color:var(--muted); margin-bottom:8px;}
+  .set-row{display:flex; align-items:center; gap:8px; margin:6px 0;}
+  .set-row .num{width:42px; color:var(--muted); font-size:.8rem;}
+  .set-row .done-btn{width:38px; height:38px; border-radius:50%; background:var(--card); border:1px solid var(--border); color:var(--muted); font-size:1rem;}
+  .set-row.done .done-btn{background:var(--accent2); color:#fff; border-color:var(--accent2);}
+  .set-row.done input{opacity:.6;}
+  .lbl{font-size:.7rem; color:var(--muted);}
+  .last-hint{font-size:.75rem; color:var(--warn); margin-top:4px;}
+  /* timer */
+  #timerBar{position:fixed; bottom:64px; left:0; right:0; display:none; justify-content:center; z-index:49;}
+  #timerBar .inner{background:var(--accent); color:#fff; border-radius:999px; padding:10px 22px;
+      font-size:1.1rem; font-weight:700; display:flex; gap:14px; align-items:center; box-shadow:0 6px 20px rgba(0,113,227,.4);}
+  #timerBar button{background:rgba(255,255,255,.25); color:#fff; border-radius:999px; padding:4px 12px; font-size:.8rem;}
+  /* historial */
+  .hist-item{border-bottom:1px solid var(--border); padding:10px 0;}
+  .hist-item:last-child{border-bottom:none;}
+  .hist-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .hist-det{font-size:.8rem; color:var(--muted); margin-top:4px; display:none;}
+  .hist-det.open{display:block;}
+  /* guías */
+  details{background:var(--card); border:1px solid var(--border); border-radius:12px; margin:10px 0; overflow:hidden;}
+  details summary{padding:13px 14px; font-weight:600; cursor:pointer; list-style:none; display:flex; justify-content:space-between;}
+  details summary::after{content:"▾"; color:var(--muted);}
+  details[open] summary::after{content:"▴";}
+  details .body{padding:0 14px 14px; font-size:.88rem; line-height:1.55;}
+  details .body ul{padding-left:20px;}
+  details .body li{margin:4px 0;}
+  .ok-list li{margin:5px 0;}
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;}
+  .stat{background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:12px; text-align:center;}
+  .stat .big{font-size:1.5rem; font-weight:800; color:var(--accent);}
+  .stat .lab{font-size:.75rem; color:var(--muted);}
+  .empty{text-align:center; color:var(--muted); padding:24px 0; font-size:.9rem;}
+  textarea{width:100%; min-height:60px; resize:vertical;}
+  .save-row{display:flex; gap:10px; margin-top:14px;}
+  .save-row .btn{flex:1; padding:14px;}
+  /* progresión, récords y edición */
+  .pr-item{display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); font-size:.85rem;}
+  .pr-item:last-child{border-bottom:none;}
+  .pr-medal{font-size:1.05rem; width:22px; text-align:center;}
+  .pr-name{flex:1; min-width:0;}
+  .pr-val{font-weight:700; color:var(--accent2); white-space:nowrap;}
+  .pr-date{font-size:.72rem; color:var(--muted); white-space:nowrap;}
+  .chart-svg{width:100%; height:auto; display:block; margin-top:6px;}
+  .chart-empty{color:var(--muted); font-size:.85rem; text-align:center; padding:18px 0;}
+  .edit-set-row{display:flex; align-items:center; gap:8px; margin:6px 0; flex-wrap:wrap;}
+  .edit-set-row .num{width:42px; color:var(--muted); font-size:.8rem;}
+  .edit-set-row input[type=number]{width:62px;}
+</style>
+<script>
+/* Tema: sigue al sistema y permite que el hub lo imponga (postMessage). */
+(function(){
+  var el = document.documentElement, mq = matchMedia("(prefers-color-scheme: dark)");
+  if (!el.getAttribute("data-theme")) el.setAttribute("data-theme", mq.matches ? "dark" : "light");
+  mq.addEventListener("change", function(e){
+    if (el.getAttribute("data-theme-locked") !== "1") el.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+  window.addEventListener("message", function(ev){
+    if (ev.data && ev.data.type === "set-theme") { el.setAttribute("data-theme", ev.data.theme); el.setAttribute("data-theme-locked", "1"); }
+  });
+})();
+</script>
+</head>
+<body>
+
+<header>
+  <h1>🏋️ Mi Plan de Entrenamiento</h1>
+  <div class="sub">Reacondicionamiento · 12 semanas · en casa</div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ TAB: PLAN ============ -->
+  <div class="tab active" id="tab-plan">
+
+    <div class="card">
+      <div class="week-row">
+        <label for="selWeek"><strong>Semana:</strong></label>
+        <select id="selWeek"></select>
+        <span class="fase-badge" id="faseBadge"></span>
+      </div>
+      <div class="muted" id="faseObj" style="margin-top:8px;"></div>
+      <div style="margin-top:10px;">
+        <label class="lbl">Fecha de inicio del plan (opcional, calcula la semana automáticamente):</label><br>
+        <input type="date" id="startDate" style="margin-top:4px;">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📅 Estructura semanal</h2>
+      <table id="tblHorario"></table>
+      <div class="muted" id="horarioNota" style="margin-top:8px;"></div>
+    </div>
+
+    <div id="rutinasList"></div>
+
+    <div class="card">
+      <h2>🔥 Calentamiento (antes de cada sesión, 8–12 min)</h2>
+      <ol class="ok-list" style="padding-left:20px; font-size:.88rem; line-height:1.5;">
+        <li><strong>Movilidad articular:</strong> cuello, hombros, codos, muñecas, cadera, rodillas y tobillos — 30 seg por zona.</li>
+        <li><strong>Activación ligera:</strong> 20 jumping jacks suaves, 10 sentadillas sin peso, 10 bisagras de cadera, 10 flexiones inclinadas en banco, 20 seg de plancha.</li>
+        <li><strong>Series de aproximación:</strong> 1–2 series con poco peso antes del primer ejercicio con barra.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ============ TAB: SESIÓN ============ -->
+  <div class="tab" id="tab-sesion">
+    <div id="sesionVacia" class="card">
+      <div class="empty">No hay ningún entrenamiento en curso.<br><br>Ve a la pestaña <strong>Plan</strong> y pulsa <strong>Entrenar</strong> en la rutina de hoy.</div>
+    </div>
+    <div id="sesionActiva" style="display:none;">
+      <div class="card">
+        <div class="rut-head">
+          <h2 id="sesTitulo"></h2>
+          <span class="pill acc" id="sesFecha"></span>
+        </div>
+        <div class="muted" id="sesRpe" style="margin-top:6px;"></div>
+      </div>
+      <div id="sesEjercicios"></div>
+      <div class="card">
+        <h3>📝 Notas de la sesión</h3>
+        <textarea id="sesNotas" placeholder="¿Cómo te sentiste? ¿Algún dolor o molestia?"></textarea>
+        <div class="save-row">
+          <button class="btn danger" onclick="cancelarSesion()">Cancelar</button>
+          <button class="btn green" onclick="guardarSesion()">✓ Guardar sesión</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: HISTORIAL ============ -->
+  <div class="tab" id="tab-historial">
+    <div class="card">
+      <h2>📊 Progreso</h2>
+      <div class="stat-grid" id="stats"></div>
+    </div>
+    <div class="card">
+      <h2>📈 Progresión y récords</h2>
+      <div id="prList"></div>
+      <div style="margin-top:14px;">
+        <label class="lbl">Ver progresión de peso:</label><br>
+        <select id="selEjProgreso" style="margin-top:4px; width:100%;"></select>
+      </div>
+      <div id="chartWrap"></div>
+    </div>
+    <div class="card">
+      <h2>🗓️ Sesiones registradas</h2>
+      <div id="histList"></div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: GUÍAS ============ -->
+  <div class="tab" id="tab-guias">
+
+    <details>
+      <summary>🎯 Escala de esfuerzo (RPE)</summary>
+      <div class="body">
+        <table>
+          <tr><th>Nivel</th><th>Sensación</th></tr>
+          <tr><td>RPE 5</td><td>Muy fácil</td></tr>
+          <tr><td>RPE 6</td><td>Fácil-moderado</td></tr>
+          <tr><td>RPE 7</td><td>Exigente pero controlado</td></tr>
+          <tr><td>RPE 8</td><td>Difícil, pero con buena técnica</td></tr>
+          <tr><td>RPE 9-10</td><td>Muy intenso, evitar al inicio</td></tr>
+        </table>
+        <p style="margin-top:8px;"><strong>Semanas 1–4:</strong> trabaja entre RPE 6 y 7, dejando 2–4 repeticiones en reserva.<br>
+        <strong>Desde la semana 5:</strong> acércate gradualmente a RPE 7–8. <strong>No entrenes al fallo</strong> las primeras semanas.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>📈 Progresión de peso</summary>
+      <div class="body">
+        <p>No subas peso si la técnica se rompe. Regla:</p>
+        <p style="margin:8px 0;"><strong>Cuando completes todas las series y repeticiones con buena técnica y sintiendo que podrías hacer 2 más, sube peso en la siguiente sesión.</strong></p>
+        <p>Ejemplo: press banca 3×10 — si haces 10, 10 y 10 con buena técnica, la próxima vez aumenta de 5 a 10 lb en total. En ejercicios pequeños (curl, tríceps) aumenta más lento.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>⚖️ Tus discos y cómo progresar sin más peso</summary>
+      <div class="body">
+        <ul>
+          <li>8 discos de 5 lb = 40 lb</li>
+          <li>4 discos de 10 lb = 40 lb</li>
+          <li>2 discos de 20 lb = 40 lb</li>
+          <li><strong>Total: 120 lb</strong> (sin contar las barras)</li>
+        </ul>
+        <p style="margin-top:8px;">Cuando un ejercicio se vuelva fácil, hazlo más difícil con: más repeticiones, tempo lento, pausas abajo, unilaterales (split squat), menos descanso, más series o rango completo.</p>
+        <p style="margin-top:6px;">Ejemplo: sentadilla bajando en 3 segundos, pausa de 1 segundo abajo y subida controlada.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>🆙 Progresión de dominadas</summary>
+      <div class="body">
+        <ul>
+          <li><strong>Nivel 1 — Colgarse de la barra:</strong> 3 series de 10–20 segundos.</li>
+          <li><strong>Nivel 2 — Dominadas escapulares:</strong> sube ligeramente el pecho activando la espalda, sin doblar mucho los brazos. 3 series de 8–10 reps.</li>
+          <li><strong>Nivel 3 — Negativas:</strong> sube con ayuda de una silla y baja lento en 3–5 segundos. 3 series de 3–5 reps.</li>
+          <li><strong>Nivel 4 — Dominadas completas:</strong> cuando controles las negativas.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>🚶 Cardio suave (semanas 1–4, 2 veces por semana)</summary>
+      <div class="body">
+        <p><strong>Opción ideal:</strong> caminata de 20 a 30 minutos a ritmo cómodo.</p>
+        <p style="margin-top:8px;"><strong>En casa:</strong></p>
+        <ul>
+          <li>5 min de marcha en el lugar.</li>
+          <li>3 rondas: 30 seg jumping jacks suaves · 30 seg sentadilla sin peso · 30 seg descanso · 30 seg mountain climbers lentos · 30 seg descanso.</li>
+          <li>5 min de movilidad.</li>
+        </ul>
+        <p style="margin-top:6px;">No debe dejarte destruido: el objetivo es mejorar condición, no agotarte.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>🔁 Circuito opcional (desde semana 5, 1 vez/semana)</summary>
+      <div class="body">
+        <p>3 a 4 rondas, descansando 1 minuto entre rondas. <strong>No lo hagas al día siguiente de pierna pesada.</strong></p>
+        <table>
+          <tr><th>Ejercicio</th><th>Tiempo/Reps</th></tr>
+          <tr><td>Sentadilla sin peso</td><td>15 reps</td></tr>
+          <tr><td>Flexiones</td><td>8-12 reps</td></tr>
+          <tr><td>Remo con mancuerna</td><td>10 por lado</td></tr>
+          <tr><td>Mountain climbers</td><td>20-30 seg</td></tr>
+          <tr><td>Plancha</td><td>30 seg</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details>
+      <summary>🧘 Movilidad (3–5 veces por semana, ideal en descanso)</summary>
+      <div class="body">
+        <table>
+          <tr><th>Ejercicio</th><th>Tiempo</th></tr>
+          <tr><td>Estiramiento de flexores de cadera</td><td>45 seg por lado</td></tr>
+          <tr><td>Estiramiento de isquiotibiales</td><td>45 seg por lado</td></tr>
+          <tr><td>Rotaciones torácicas</td><td>10 por lado</td></tr>
+          <tr><td>Estiramiento de pecho en pared</td><td>45 seg por lado</td></tr>
+          <tr><td>Sentadilla profunda asistida</td><td>30-60 seg</td></tr>
+          <tr><td>Movilidad de tobillo</td><td>10 por lado</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details>
+      <summary>⏱️ Descanso entre series</summary>
+      <div class="body">
+        <table>
+          <tr><th>Tipo de ejercicio</th><th>Descanso</th></tr>
+          <tr><td>Pesados: sentadilla, press, peso muerto, remo</td><td>90-150 seg</td></tr>
+          <tr><td>Accesorios: curl, tríceps, elevaciones</td><td>45-90 seg</td></tr>
+          <tr><td>Abdominales y movilidad</td><td>30-60 seg</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details>
+      <summary>🍗 Nutrición básica</summary>
+      <div class="body">
+        <ul>
+          <li>Come suficiente proteína y toma agua durante el día.</li>
+          <li>Duerme de 7 a 9 horas si es posible.</li>
+          <li>Evita entrenar pesado en ayunas si te sientes débil.</li>
+          <li>Come carbohidratos + proteína después de entrenar.</li>
+        </ul>
+        <p style="margin-top:8px;"><strong>Opciones sencillas:</strong> huevos con tortilla · pollo con arroz · atún con tostadas · yogur griego con fruta · avena con leche · carne, frijoles y verduras · licuado con leche, plátano y proteína.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>⚠️ Señales de que vas demasiado rápido</summary>
+      <div class="body">
+        <p>Reduce volumen o intensidad si notas:</p>
+        <ul>
+          <li>Dolor articular persistente.</li>
+          <li>Dolor lumbar durante sentadillas o peso muerto.</li>
+          <li>Fatiga excesiva durante varios días.</li>
+          <li>Sueño muy alterado.</li>
+          <li>Pérdida de fuerza repentina.</li>
+          <li>Dolor muscular que no mejora después de 72 horas.</li>
+          <li>Falta de aire anormal o mareos.</li>
+        </ul>
+        <p style="margin-top:6px;">Un poco de dolor muscular es normal. <strong>Dolor agudo, punzante o articular no lo es.</strong></p>
+      </div>
+    </details>
+
+    <details>
+      <summary>📋 Resumen del plan</summary>
+      <div class="body">
+        <table>
+          <tr><th>Fase</th><th>Semanas</th><th>Objetivo</th><th>Frecuencia</th></tr>
+          <tr><td>Fase 1</td><td>1-4</td><td>Adaptación, técnica y movilidad</td><td>3 fuerza + 2 cardio suave</td></tr>
+          <tr><td>Fase 2</td><td>5-8</td><td>Fuerza base y resistencia</td><td>4 fuerza + 1-2 cardio</td></tr>
+          <tr><td>Fase 3</td><td>9-12</td><td>Preparar intensidad mayor</td><td>4 fuerza + 1 acondicionamiento</td></tr>
+        </table>
+        <p style="margin-top:8px;">Empieza con pesos fáciles. El primer mes lo importante es <strong>crear el hábito, mejorar técnica y preparar articulaciones</strong>. Si tienes alguna lesión o condición médica, conviene una revisión médica antes de comenzar.</p>
+      </div>
+    </details>
+
+    <div class="card">
+      <h2>🗑️ Datos</h2>
+      <p class="muted">Todo se guarda localmente en este navegador.</p>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn ghost small" onclick="exportarDatos()">Exportar respaldo</button>
+        <button class="btn ghost small" onclick="document.getElementById('importFile').click()">Importar respaldo</button>
+        <button class="btn danger small" onclick="borrarTodo()">Borrar todo el historial</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </div>
+
+</div>
+
+<!-- Timer flotante -->
+<div id="timerBar">
+  <div class="inner">
+    <span>⏱️ <span id="timerText">0:00</span></span>
+    <button onclick="timerMas30()">+30s</button>
+    <button onclick="timerStop()">✕</button>
+  </div>
+</div>
+
+<nav>
+  <button class="active" data-tab="plan" onclick="irTab('plan')"><span class="ico">📅</span>Plan</button>
+  <button data-tab="sesion" onclick="irTab('sesion')"><span class="ico">💪</span>Sesión</button>
+  <button data-tab="historial" onclick="irTab('historial')"><span class="ico">📊</span>Historial</button>
+  <button data-tab="guias" onclick="irTab('guias')"><span class="ico">📖</span>Guías</button>
+</nav>
+
+<script>
+/* ================== DATOS DEL PLAN ================== */
+const FASES = [
+  {
+    num: 1, semanas: [1, 4], nombre: "Adaptación general",
+    objetivo: "Acostumbrar articulaciones, músculos y sistema cardiovascular al ejercicio. Intensidad RPE 6–7, deja 2–4 reps en reserva. No entrenes al fallo.",
+    horario: [
+      ["Lunes", "Fuerza A"], ["Martes", "Caminata + movilidad"], ["Miércoles", "Descanso"],
+      ["Jueves", "Fuerza B"], ["Viernes", "Caminata + movilidad"], ["Sábado", "Fuerza A o B alternado"], ["Domingo", "Descanso"]
+    ],
+    nota: "Alterna: Sem 1: A/B/A · Sem 2: B/A/B · Sem 3: A/B/A · Sem 4: B/A/B",
+    rutinas: [
+      { id: "f1a", nombre: "Fuerza A", ejercicios: [
+        { n: "Sentadilla con barra o goblet squat", s: 3, r: "10-12", d: 90 },
+        { n: "Press de banca con barra o mancuernas", s: 3, r: "10-12", d: 90 },
+        { n: "Remo con barra", s: 3, r: "10-12", d: 90 },
+        { n: "Peso muerto rumano", s: 2, r: "10-12", d: 90 },
+        { n: "Press militar con mancuernas", s: 2, r: "10-12", d: 75 },
+        { n: "Plancha", s: 3, r: "20-30 seg", d: 45 }
+      ]},
+      { id: "f1b", nombre: "Fuerza B", ejercicios: [
+        { n: "Peso muerto rumano", s: 3, r: "10-12", d: 90 },
+        { n: "Press inclinado con mancuernas", s: 3, r: "10-12", d: 90 },
+        { n: "Jalón en barra de dominadas (asistido o negativas)", s: 3, r: "5-8", d: 90 },
+        { n: "Zancadas o split squat", s: 2, r: "8-10 /pierna", d: 90 },
+        { n: "Curl con barra Z", s: 2, r: "12-15", d: 60 },
+        { n: "Extensión de tríceps con barra Z o mancuerna", s: 2, r: "12-15", d: 60 },
+        { n: "Crunch controlado o elevación de rodillas", s: 3, r: "10-15", d: 45 }
+      ]},
+      { id: "f1c", nombre: "Cardio suave + movilidad", cardio: true, ejercicios: [
+        { n: "Caminata a ritmo cómodo (o circuito en casa)", s: 1, r: "20-30 min", d: 0 },
+        { n: "Rutina de movilidad", s: 1, r: "5-10 min", d: 0 }
+      ]}
+    ]
+  },
+  {
+    num: 2, semanas: [5, 8], nombre: "Fuerza base y resistencia",
+    objetivo: "Aumentar fuerza, volumen y resistencia muscular. 4 días de fuerza. Intensidad RPE 7–8 gradualmente.",
+    horario: [
+      ["Lunes", "Tren superior A"], ["Martes", "Tren inferior A"], ["Miércoles", "Cardio suave o descanso"],
+      ["Jueves", "Tren superior B"], ["Viernes", "Tren inferior B"], ["Sábado", "Caminata, movilidad o descanso"], ["Domingo", "Descanso"]
+    ],
+    nota: "Desde esta fase puedes añadir el circuito opcional 1 vez por semana (ver Guías). No al día siguiente de pierna pesada.",
+    rutinas: [
+      { id: "f2sa", nombre: "Tren superior A", ejercicios: [
+        { n: "Press de banca con barra", s: 4, r: "8-10", d: 120 },
+        { n: "Remo con barra", s: 4, r: "8-10", d: 120 },
+        { n: "Press militar con mancuernas o barra", s: 3, r: "8-10", d: 90 },
+        { n: "Dominadas asistidas o negativas", s: 3, r: "5-8", d: 90 },
+        { n: "Curl con barra Z", s: 3, r: "10-12", d: 60 },
+        { n: "Extensión de tríceps", s: 3, r: "10-12", d: 60 }
+      ]},
+      { id: "f2ia", nombre: "Tren inferior A", ejercicios: [
+        { n: "Sentadilla con barra", s: 4, r: "8-10", d: 120 },
+        { n: "Peso muerto rumano", s: 3, r: "8-10", d: 120 },
+        { n: "Split squat", s: 3, r: "8-10 /pierna", d: 90 },
+        { n: "Elevación de talones", s: 3, r: "12-15", d: 60 },
+        { n: "Plancha", s: 3, r: "30-45 seg", d: 45 }
+      ]},
+      { id: "f2sb", nombre: "Tren superior B", ejercicios: [
+        { n: "Press inclinado con mancuernas", s: 4, r: "8-10", d: 120 },
+        { n: "Remo con mancuerna a una mano", s: 4, r: "10 /lado", d: 90 },
+        { n: "Press militar con barra", s: 3, r: "8-10", d: 90 },
+        { n: "Flexiones", s: 3, r: "8-15", d: 60 },
+        { n: "Curl martillo con mancuernas", s: 3, r: "10-12", d: 60 },
+        { n: "Press cerrado con barra o fondos entre bancos", s: 3, r: "8-12", d: 60 }
+      ]},
+      { id: "f2ib", nombre: "Tren inferior B", ejercicios: [
+        { n: "Peso muerto rumano o convencional ligero", s: 4, r: "6-8", d: 120 },
+        { n: "Sentadilla frontal o goblet squat", s: 3, r: "10", d: 120 },
+        { n: "Hip thrust con barra apoyado en banco", s: 3, r: "10-12", d: 90 },
+        { n: "Zancadas caminando o estáticas", s: 3, r: "10 /pierna", d: 90 },
+        { n: "Elevación de piernas o crunch", s: 3, r: "12-15", d: 45 }
+      ]}
+    ]
+  },
+  {
+    num: 3, semanas: [9, 12], nombre: "Preparación para intensidad mayor",
+    objetivo: "Trabajar más pesado sin perder técnica. Empuje / Pierna / Jalón / Pierna + cuerpo completo.",
+    horario: [
+      ["Lunes", "Empuje"], ["Martes", "Pierna"], ["Miércoles", "Descanso activo"],
+      ["Jueves", "Jalón"], ["Viernes", "Pierna + cuerpo completo"], ["Sábado", "Cardio o acondicionamiento"], ["Domingo", "Descanso"]
+    ],
+    nota: "Ya puedes trabajar más pesado, pero la técnica siempre manda.",
+    rutinas: [
+      { id: "f3e", nombre: "Empuje (pecho, hombro, tríceps)", ejercicios: [
+        { n: "Press banca con barra", s: 4, r: "6-8", d: 150 },
+        { n: "Press inclinado con mancuernas", s: 3, r: "8-10", d: 120 },
+        { n: "Press militar", s: 4, r: "6-8", d: 120 },
+        { n: "Flexiones", s: 3, r: "Al fallo técnico", d: 90 },
+        { n: "Extensión de tríceps con barra Z", s: 3, r: "10-12", d: 60 }
+      ]},
+      { id: "f3p", nombre: "Pierna", ejercicios: [
+        { n: "Sentadilla con barra", s: 4, r: "6-8", d: 150 },
+        { n: "Peso muerto rumano", s: 4, r: "8", d: 120 },
+        { n: "Split squat", s: 3, r: "8 /pierna", d: 90 },
+        { n: "Hip thrust", s: 3, r: "10", d: 90 },
+        { n: "Plancha", s: 3, r: "45-60 seg", d: 45 }
+      ]},
+      { id: "f3j", nombre: "Jalón (espalda y bíceps)", ejercicios: [
+        { n: "Dominadas asistidas, negativas o completas", s: 4, r: "4-8", d: 120 },
+        { n: "Remo con barra", s: 4, r: "6-8", d: 120 },
+        { n: "Remo con mancuerna", s: 3, r: "10 /lado", d: 90 },
+        { n: "Curl con barra Z", s: 3, r: "8-10", d: 60 },
+        { n: "Curl martillo", s: 3, r: "10-12", d: 60 },
+        { n: "Encogimientos con barra o mancuernas", s: 3, r: "12", d: 60 }
+      ]},
+      { id: "f3pc", nombre: "Pierna + cuerpo completo", ejercicios: [
+        { n: "Peso muerto ligero o moderado", s: 3, r: "5-6", d: 120 },
+        { n: "Sentadilla goblet", s: 3, r: "10-12", d: 90 },
+        { n: "Press banca ligero", s: 3, r: "10", d: 90 },
+        { n: "Remo con barra ligero", s: 3, r: "10", d: 90 },
+        { n: "Farmer walk con mancuernas", s: 3, r: "30-45 seg", d: 90 },
+        { n: "Abdominales", s: 3, r: "12-15", d: 45 }
+      ]}
+    ]
+  }
+];
+
+/* ================== ESTADO ================== */
+const LS_HIST = "entreno_historial_v1";
+const LS_DRAFT = "entreno_draft_v1";
+const LS_CFG = "entreno_cfg_v1";
+
+let historial = JSON.parse(localStorage.getItem(LS_HIST) || "[]");
+let cfg = JSON.parse(localStorage.getItem(LS_CFG) || "{}");
+let draft = JSON.parse(localStorage.getItem(LS_DRAFT) || "null");
+
+function saveHist(){ localStorage.setItem(LS_HIST, JSON.stringify(historial)); }
+function saveCfg(){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
+function saveDraft(){ draft ? localStorage.setItem(LS_DRAFT, JSON.stringify(draft)) : localStorage.removeItem(LS_DRAFT); }
+
+function faseDeSemana(w){ return FASES.find(f => w >= f.semanas[0] && w <= f.semanas[1]); }
+
+function semanaCalculada(){
+  if(!cfg.startDate) return null;
+  const ini = new Date(cfg.startDate + "T00:00:00");
+  const dias = Math.floor((Date.now() - ini.getTime()) / 86400000);
+  if(dias < 0) return 1;
+  return Math.min(12, Math.floor(dias / 7) + 1);
+}
+
+/* ================== NAVEGACIÓN ================== */
+function irTab(t){
+  document.querySelectorAll(".tab").forEach(e => e.classList.remove("active"));
+  document.getElementById("tab-" + t).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === t));
+  if(t === "historial") renderHistorial();
+  window.scrollTo(0, 0);
+}
+
+/* ================== PLAN ================== */
+const selWeek = document.getElementById("selWeek");
+for(let i = 1; i <= 12; i++){
+  const o = document.createElement("option");
+  o.value = i; o.textContent = "Semana " + i;
+  selWeek.appendChild(o);
+}
+selWeek.addEventListener("change", () => { cfg.week = +selWeek.value; saveCfg(); renderPlan(); });
+
+const inpStart = document.getElementById("startDate");
+if(cfg.startDate) inpStart.value = cfg.startDate;
+inpStart.addEventListener("change", () => {
+  cfg.startDate = inpStart.value || null; saveCfg();
+  const w = semanaCalculada();
+  if(w){ cfg.week = w; saveCfg(); }
+  renderPlan();
+});
+
+function renderPlan(){
+  const auto = semanaCalculada();
+  const w = cfg.week || auto || 1;
+  selWeek.value = w;
+  const fase = faseDeSemana(w);
+  document.getElementById("faseBadge").textContent = "Fase " + fase.num + " · " + fase.nombre;
+  document.getElementById("faseObj").textContent = "🎯 " + fase.objetivo;
+
+  const tbl = document.getElementById("tblHorario");
+  tbl.innerHTML = "<tr><th>Día</th><th>Entrenamiento</th></tr>" +
+    fase.horario.map(h => `<tr><td>${h[0]}</td><td>${h[1]}</td></tr>`).join("");
+  document.getElementById("horarioNota").textContent = fase.nota;
+
+  const cont = document.getElementById("rutinasList");
+  cont.innerHTML = "";
+  fase.rutinas.forEach(r => {
+    const ultimaVez = [...historial].reverse().find(s => s.rutinaId === r.id);
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <div class="rut-head">
+        <h2>💪 ${r.nombre}</h2>
+        <button class="btn green" onclick="iniciarSesion('${r.id}')">Entrenar ▶</button>
+      </div>
+      ${ultimaVez ? `<div class="muted" style="margin:6px 0;">Última vez: ${fmtFecha(ultimaVez.fecha)}</div>` : ""}
+      <table style="margin-top:8px;">
+        <tr><th>Ejercicio</th><th>Series</th><th>Reps</th><th>Desc.</th></tr>
+        ${r.ejercicios.map(e => `<tr><td>${e.n}</td><td>${e.s}</td><td>${e.r}</td><td>${e.d ? e.d + "s" : "—"}</td></tr>`).join("")}
+      </table>`;
+    cont.appendChild(div);
+  });
+}
+
+/* ================== SESIÓN ================== */
+function buscarRutina(id){
+  for(const f of FASES){ const r = f.rutinas.find(x => x.id === id); if(r) return { rutina: r, fase: f }; }
+  return null;
+}
+
+function ultimoPeso(nombreEj){
+  for(let i = historial.length - 1; i >= 0; i--){
+    const ej = historial[i].ejercicios.find(e => e.nombre === nombreEj);
+    if(ej){
+      const pesos = ej.sets.map(s => s.peso).filter(p => p !== "" && p != null);
+      if(pesos.length) return pesos[pesos.length - 1];
+    }
+  }
+  return null;
+}
+
+function iniciarSesion(rutId){
+  if(draft && !confirm("Hay una sesión en curso. ¿Descartarla y empezar una nueva?")) { irTab("sesion"); return; }
+  const { rutina } = buscarRutina(rutId);
+  draft = {
+    fecha: new Date().toISOString(),
+    semana: cfg.week || 1,
+    rutinaId: rutina.id,
+    rutinaNombre: rutina.nombre,
+    notas: "",
+    ejercicios: rutina.ejercicios.map(e => ({
+      nombre: e.n, objetivo: `${e.s} × ${e.r}`, descanso: e.d,
+      sets: Array.from({ length: e.s }, () => ({ peso: "", reps: "", done: false }))
+    }))
+  };
+  saveDraft();
+  renderSesion();
+  irTab("sesion");
+}
+
+function renderSesion(){
+  const vacia = document.getElementById("sesionVacia");
+  const activa = document.getElementById("sesionActiva");
+  if(!draft){ vacia.style.display = "block"; activa.style.display = "none"; return; }
+  vacia.style.display = "none"; activa.style.display = "block";
+
+  document.getElementById("sesTitulo").textContent = "💪 " + draft.rutinaNombre;
+  document.getElementById("sesFecha").textContent = "Semana " + draft.semana + " · " + fmtFecha(draft.fecha);
+  const fase = faseDeSemana(draft.semana);
+  document.getElementById("sesRpe").textContent = fase.num === 1
+    ? "🎯 Intensidad: RPE 6–7. Deja 2–4 reps en reserva. Nada de fallo."
+    : "🎯 Intensidad: RPE 7–8 con buena técnica.";
+  document.getElementById("sesNotas").value = draft.notas || "";
+
+  const cont = document.getElementById("sesEjercicios");
+  cont.innerHTML = "";
+  draft.ejercicios.forEach((ej, ei) => {
+    const last = ultimoPeso(ej.nombre);
+    const card = document.createElement("div");
+    card.className = "ej-card";
+    card.innerHTML = `
+      <h4>${ei + 1}. ${ej.nombre}</h4>
+      <div class="ej-meta">Objetivo: ${ej.objetivo}${ej.descanso ? " · Descanso: " + ej.descanso + "s" : ""}</div>
+      ${ej.sets.map((s, si) => `
+        <div class="set-row ${s.done ? "done" : ""}" id="set-${ei}-${si}">
+          <span class="num">Set ${si + 1}</span>
+          <span><span class="lbl">lb</span><br><input type="number" min="0" step="2.5" value="${s.peso}" placeholder="${last ?? ""}" onchange="setVal(${ei},${si},'peso',this.value)"></span>
+          <span><span class="lbl">reps</span><br><input type="number" min="0" value="${s.reps}" onchange="setVal(${ei},${si},'reps',this.value)"></span>
+          <button class="done-btn" onclick="toggleSet(${ei},${si})">✓</button>
+        </div>`).join("")}
+      ${last !== null ? `<div class="last-hint">⚡ Última vez: ${last} lb. Si completaste todo con 2 reps en reserva, sube 5–10 lb.</div>` : ""}
+      ${ej.descanso ? `<button class="btn ghost small" style="margin-top:8px;" onclick="timerStart(${ej.descanso})">⏱️ Descanso ${ej.descanso}s</button>` : ""}`;
+    cont.appendChild(card);
+  });
+}
+
+function setVal(ei, si, campo, val){ draft.ejercicios[ei].sets[si][campo] = val; saveDraft(); }
+function toggleSet(ei, si){
+  const s = draft.ejercicios[ei].sets[si];
+  s.done = !s.done;
+  document.getElementById(`set-${ei}-${si}`).classList.toggle("done", s.done);
+  saveDraft();
+  if(s.done && draft.ejercicios[ei].descanso) timerStart(draft.ejercicios[ei].descanso);
+}
+
+function guardarSesion(){
+  draft.notas = document.getElementById("sesNotas").value;
+  const hechos = draft.ejercicios.reduce((a, e) => a + e.sets.filter(s => s.done).length, 0);
+  if(hechos === 0 && !confirm("No marcaste ningún set como hecho. ¿Guardar de todas formas?")) return;
+  historial.push(draft);
+  saveHist();
+  draft = null; saveDraft();
+  renderSesion(); renderPlan();
+  irTab("historial");
+}
+
+function cancelarSesion(){
+  if(!confirm("¿Descartar esta sesión sin guardar?")) return;
+  draft = null; saveDraft();
+  renderSesion();
+}
+
+/* ================== TIMER ================== */
+let timerInt = null, timerSec = 0;
+function timerStart(seg){
+  timerSec = seg;
+  document.getElementById("timerBar").style.display = "flex";
+  timerPinta();
+  clearInterval(timerInt);
+  timerInt = setInterval(() => {
+    timerSec--;
+    if(timerSec <= 0){
+      timerStop();
+      if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = 880; g.gain.value = .2;
+        o.start(); o.stop(ctx.currentTime + .4);
+      }catch(e){}
+      return;
+    }
+    timerPinta();
+  }, 1000);
+}
+function timerPinta(){
+  const m = Math.floor(timerSec / 60), s = timerSec % 60;
+  document.getElementById("timerText").textContent = m + ":" + String(s).padStart(2, "0");
+}
+function timerMas30(){ timerSec += 30; timerPinta(); }
+function timerStop(){ clearInterval(timerInt); document.getElementById("timerBar").style.display = "none"; }
+
+/* ================== HISTORIAL ================== */
+function fmtFecha(iso){
+  return new Date(iso).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" });
+}
+
+function renderHistorial(){
+  const stats = document.getElementById("stats");
+  const total = historial.length;
+  const semanaActual = cfg.week || semanaCalculada() || 1;
+  const ahora = Date.now();
+  const ult7 = historial.filter(s => ahora - new Date(s.fecha).getTime() < 7 * 86400000).length;
+  let racha = 0;
+  const diasConSesion = new Set(historial.map(s => new Date(s.fecha).toDateString()));
+  for(let d = 0; d < 60; d++){
+    const dia = new Date(ahora - d * 86400000).toDateString();
+    if(diasConSesion.has(dia)) racha++;
+    else if(d > 1) break;
+  }
+  stats.innerHTML = `
+    <div class="stat"><div class="big">${total}</div><div class="lab">Sesiones totales</div></div>
+    <div class="stat"><div class="big">${ult7}</div><div class="lab">Últimos 7 días</div></div>
+    <div class="stat"><div class="big">${semanaActual}/12</div><div class="lab">Semana del plan</div></div>`;
+
+  renderProgreso();
+
+  const list = document.getElementById("histList");
+  if(!historial.length){
+    list.innerHTML = `<div class="empty">Aún no hay sesiones guardadas.<br>¡Tu primera sesión te espera! 💪</div>`;
+    return;
+  }
+  list.innerHTML = "";
+  [...historial].reverse().forEach((s, idx) => {
+    const realIdx = historial.length - 1 - idx;
+    const hechos = s.ejercicios.reduce((a, e) => a + e.sets.filter(x => x.done).length, 0);
+    const totalSets = s.ejercicios.reduce((a, e) => a + e.sets.length, 0);
+    const editing = editIdx === realIdx;
+    const div = document.createElement("div");
+    div.className = "hist-item";
+    let detalle;
+    if(editing){
+      detalle = s.ejercicios.map((e, ei) => `
+        <div style="margin:10px 0 4px;"><strong>${e.nombre}</strong>
+          ${e.sets.map((x, si) => `
+            <div class="edit-set-row">
+              <span class="num">Set ${si + 1}</span>
+              <input type="number" step="2.5" min="0" value="${x.peso}" data-ei="${ei}" data-si="${si}" data-f="peso"><span class="lbl">lb</span>
+              <input type="number" min="0" value="${x.reps}" data-ei="${ei}" data-si="${si}" data-f="reps"><span class="lbl">reps</span>
+              <label class="lbl" style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" data-ei="${ei}" data-si="${si}" data-f="done" ${x.done ? "checked" : ""} style="width:18px;height:18px;accent-color:var(--accent2);">hecho</label>
+            </div>`).join("")}
+        </div>`).join("") +
+        `<label class="lbl" style="display:block;margin-top:8px;">Notas</label>
+         <textarea data-notas style="margin-top:4px;">${s.notas || ""}</textarea>
+         <div style="display:flex;gap:8px;margin-top:10px;">
+           <button class="btn ghost small" onclick="cancelarEdicion()" style="flex:1;">Cancelar</button>
+           <button class="btn green small" onclick="guardarEdicion(${realIdx})" style="flex:1;">Guardar cambios</button>
+         </div>`;
+    } else {
+      detalle = s.ejercicios.map(e => {
+        const setsTxt = e.sets.map(x => (x.peso || "—") + "lb×" + (x.reps || "—") + (x.done ? "✓" : "")).join(" · ");
+        return `<div style="margin:4px 0;"><strong>${e.nombre}:</strong> ${setsTxt}</div>`;
+      }).join("") + (s.notas ? `<div style="margin-top:6px;">📝 ${s.notas}</div>` : "");
+    }
+    div.innerHTML = `
+      <div class="hist-top">
+        <div>
+          <strong>${s.rutinaNombre}</strong>
+          <div class="muted">${fmtFecha(s.fecha)} · Semana ${s.semana} · ${hechos}/${totalSets} sets</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn ghost small" onclick="toggleDet(this)">${editing ? "Ocultar" : "Ver"}</button>
+          <button class="btn ghost small" onclick="editarSesion(${realIdx})" title="Editar">✏️</button>
+          <button class="btn danger small" onclick="borrarSesion(${realIdx})">🗑</button>
+        </div>
+      </div>
+      <div class="hist-det${editing ? " open" : ""}">${detalle}</div>`;
+    list.appendChild(div);
+  });
+}
+
+/* ----- Progresión de peso y récords personales ----- */
+function nombresEjerciciosHist(){
+  const set = new Set();
+  historial.forEach(s => s.ejercicios.forEach(e => {
+    if(e.sets.some(x => +x.peso > 0)) set.add(e.nombre);
+  }));
+  return [...set].sort();
+}
+function maxPesoSesion(s, nombre){
+  const e = s.ejercicios.find(x => x.nombre === nombre);
+  if(!e) return null;
+  const pesos = e.sets.map(x => +x.peso).filter(p => p > 0);
+  return pesos.length ? Math.max(...pesos) : null;
+}
+function calcularPRs(){
+  const prs = {};
+  historial.forEach(s => s.ejercicios.forEach(e => e.sets.forEach(x => {
+    const p = +x.peso;
+    if(p > 0 && (!prs[e.nombre] || p > prs[e.nombre].peso)) prs[e.nombre] = { peso: p, reps: x.reps, fecha: s.fecha };
+  })));
+  return prs;
+}
+function renderProgreso(){
+  const prCont = document.getElementById("prList");
+  const prs = calcularPRs();
+  const arr = Object.keys(prs).map(n => Object.assign({ nombre: n }, prs[n])).sort((a, b) => b.peso - a.peso);
+  if(!arr.length){
+    prCont.innerHTML = `<div class="chart-empty">Aún no hay récords. Registra el peso en tus sesiones y aquí verás tus mejores marcas. 🏅</div>`;
+  } else {
+    const medals = ["🥇", "🥈", "🥉"];
+    prCont.innerHTML = arr.slice(0, 8).map((r, i) =>
+      `<div class="pr-item"><span class="pr-medal">${medals[i] || "🏅"}</span><span class="pr-name">${r.nombre}</span><span class="pr-val">${r.peso} lb</span><span class="pr-date">${fmtFecha(r.fecha)}</span></div>`
+    ).join("");
+  }
+  const sel = document.getElementById("selEjProgreso");
+  const nombres = nombresEjerciciosHist();
+  const prev = sel.value;
+  sel.innerHTML = nombres.map(n => `<option>${n}</option>`).join("");
+  if(!nombres.length){ document.getElementById("chartWrap").innerHTML = `<div class="chart-empty">Registra sesiones con peso para ver tu progresión.</div>`; return; }
+  if(nombres.includes(prev)) sel.value = prev;
+  renderChart(sel.value);
+}
+function renderChart(nombre){
+  const wrap = document.getElementById("chartWrap");
+  const pts = [];
+  historial.forEach(s => { const m = maxPesoSesion(s, nombre); if(m != null) pts.push({ fecha: s.fecha, peso: m }); });
+  if(!pts.length){ wrap.innerHTML = `<div class="chart-empty">Sin datos de peso para este ejercicio todavía.</div>`; return; }
+  const W = 320, H = 170, pad = 32;
+  const pesos = pts.map(p => p.peso);
+  let min = Math.min(...pesos), max = Math.max(...pesos);
+  if(min === max){ min = Math.max(0, min - 5); max = max + 5; }
+  const n = pts.length;
+  const X = i => n === 1 ? W / 2 : pad + (W - 2 * pad) * i / (n - 1);
+  const Y = v => (H - pad) - (H - 2 * pad) * (v - min) / (max - min);
+  const linea = pts.map((p, i) => `${X(i).toFixed(1)},${Y(p.peso).toFixed(1)}`).join(" ");
+  const dots = pts.map((p, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(p.peso).toFixed(1)}" r="3.5" fill="var(--accent)"/>`).join("");
+  const fmt = iso => { const d = new Date(iso); return d.getDate() + "/" + (d.getMonth() + 1); };
+  wrap.innerHTML = `
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      <line x1="${pad}" y1="${H - pad}" x2="${W - pad}" y2="${H - pad}" stroke="var(--border)"/>
+      <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H - pad}" stroke="var(--border)"/>
+      <text x="6" y="${pad + 4}" fill="var(--muted)" font-size="9">${max}</text>
+      <text x="6" y="${H - pad}" fill="var(--muted)" font-size="9">${min}</text>
+      <text x="${pad}" y="${H - 8}" fill="var(--muted)" font-size="9">${fmt(pts[0].fecha)}</text>
+      <text x="${W - pad}" y="${H - 8}" fill="var(--muted)" font-size="9" text-anchor="end">${fmt(pts[n - 1].fecha)}</text>
+      ${n > 1 ? `<polyline points="${linea}" fill="none" stroke="var(--accent)" stroke-width="2"/>` : ""}
+      ${dots}
+      <text x="${W - pad}" y="${pad - 4}" fill="var(--accent2)" font-size="10" text-anchor="end" font-weight="bold">máx ${max} lb</text>
+    </svg>`;
+}
+
+/* ----- Editar una sesión pasada ----- */
+let editIdx = null;
+function editarSesion(idx){ editIdx = (editIdx === idx) ? null : idx; renderHistorial(); }
+function cancelarEdicion(){ editIdx = null; renderHistorial(); }
+function guardarEdicion(idx){
+  const det = document.querySelector(".hist-det.open");
+  if(!det){ editIdx = null; return; }
+  det.querySelectorAll("input[data-f]").forEach(inp => {
+    const set = historial[idx].ejercicios[+inp.dataset.ei].sets[+inp.dataset.si];
+    if(inp.dataset.f === "done") set.done = inp.checked;
+    else set[inp.dataset.f] = inp.value;
+  });
+  const ta = det.querySelector("textarea[data-notas]");
+  if(ta) historial[idx].notas = ta.value;
+  saveHist();
+  editIdx = null;
+  renderHistorial(); renderPlan();
+}
+
+function toggleDet(btn){
+  const det = btn.closest(".hist-item").querySelector(".hist-det");
+  det.classList.toggle("open");
+  btn.textContent = det.classList.contains("open") ? "Ocultar" : "Ver";
+}
+
+function borrarSesion(idx){
+  if(!confirm("¿Borrar esta sesión del historial?")) return;
+  historial.splice(idx, 1);
+  saveHist();
+  renderHistorial(); renderPlan();
+}
+
+function borrarTodo(){
+  if(!confirm("Esto borrará TODO tu historial de entrenamientos. ¿Seguro?")) return;
+  if(!confirm("¿De verdad? No se puede deshacer.")) return;
+  historial = []; saveHist();
+  renderHistorial(); renderPlan();
+}
+
+function exportarDatos(){
+  const blob = new Blob([JSON.stringify({ historial, cfg }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "respaldo_entrenamientos_" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+}
+function importarDatos(file){
+  const rd = new FileReader();
+  rd.onload = () => {
+    let data;
+    try { data = JSON.parse(rd.result); } catch(e) { alert("El archivo no es válido."); return; }
+    let hist = null, conf = null, drf;
+    if(data && data.data && typeof data.data === "object"){
+      // respaldo global de Mi Diario
+      try { if(data.data.entreno_historial_v1) hist = JSON.parse(data.data.entreno_historial_v1); } catch(e){}
+      try { if(data.data.entreno_cfg_v1) conf = JSON.parse(data.data.entreno_cfg_v1); } catch(e){}
+      try { if(data.data.entreno_draft_v1) drf = data.data.entreno_draft_v1; } catch(e){}
+    } else if(Array.isArray(data.historial)){
+      hist = data.historial; conf = data.cfg || null;
+    }
+    if(!Array.isArray(hist)){ alert("El archivo no contiene un respaldo de Ejercicio."); return; }
+    if(!confirm("Esto reemplazará tu historial y configuración actuales de Ejercicio. ¿Continuar?")) return;
+    localStorage.setItem(LS_HIST, JSON.stringify(hist));
+    if(conf) localStorage.setItem(LS_CFG, JSON.stringify(conf));
+    if(drf !== undefined) localStorage.setItem(LS_DRAFT, drf);
+    location.reload();
+  };
+  rd.readAsText(file);
+}
+document.getElementById("importFile").addEventListener("change", function(){
+  if(this.files && this.files[0]) importarDatos(this.files[0]);
+  this.value = "";
+});
+document.getElementById("selEjProgreso").addEventListener("change", function(){ renderChart(this.value); });
+
+/* ================== INICIO ================== */
+const wAuto = semanaCalculada();
+if(wAuto && !cfg.weekManual) cfg.week = wAuto;
+renderPlan();
+renderSesion();
+if(draft) irTab("sesion");
+</script>
+</body>
+</html>
