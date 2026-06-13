@@ -8,7 +8,7 @@ pestañas (`index.html`) que las embebe en iframes del mismo origen:
 | Tareas    | `To-do/index.html`                   | `todo-app-v1`, `todo-theme`     |
 | Ejercicio | `Ejercicio/entrenamientos.html`      | `entreno_historial_v1`, `entreno_cfg_v1`, `entreno_draft_v1` |
 | Movilidad | `Movilidad/index.html`               | `movilidad-progress`            |
-| Inglés    | `plan ingles/estudio-ingles.html`    | `planIngles_v1`                 |
+| Inglés    | `plan-ingles/estudio-ingles.html`    | `planIngles_v1`                 |
 
 - **Sin build**: HTML + CSS + JS vanilla en un único archivo por sección.
 - **Offline-first**: service worker (`sw.js`) con estrategia *red primero, caché si falla*.
@@ -53,5 +53,5 @@ firestore.rules       Reglas de seguridad de Cloud Firestore
 To-do/                Sección Tareas (+ su propio manifest/sw/iconos)
 Ejercicio/            Sección Ejercicio
 Movilidad/            Sección Movilidad
-plan ingles/          Sección Inglés
+plan-ingles/          Sección Inglés
 ```

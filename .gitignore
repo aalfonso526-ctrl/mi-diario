@@ -10,8 +10,9 @@ ehthumbs.db
 Desktop.ini
 .DS_Store
 
-# Editores
+# Editores y herramientas
 .vscode/
+.claude/
 *.swp
 *~
 

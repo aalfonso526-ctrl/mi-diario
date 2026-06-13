@@ -18,4 +18,11 @@
    };
    ============================================================ */
 
-var FIREBASE_CONFIG = null;
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAR2HXEMA_XP4PuZaiZ2IWtyrF5Z4B_tbk",
+  authDomain: "mis-tareas-97b8d.firebaseapp.com",
+  projectId: "mis-tareas-97b8d",
+  storageBucket: "mis-tareas-97b8d.firebasestorage.app",
+  messagingSenderId: "342091244780",
+  appId: "1:342091244780:web:4942669d9f8177a8ab31c9"
+};
