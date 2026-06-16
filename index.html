@@ -273,6 +273,15 @@
   .logro-name { font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.3; }
   .logro-desc { font-size: 10px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
 
+  /* ---------- Recordatorio tareas vencidas ---------- */
+  .overdue-banner { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+    background: rgba(255,159,10,.1); border: 1px solid rgba(255,159,10,.4);
+    border-radius: var(--radius); padding: 12px 16px; margin-top: 14px; color: var(--text); }
+  .overdue-banner:active { opacity: .75; }
+  .overdue-icon { font-size: 18px; flex-shrink: 0; }
+  .overdue-text { flex: 1; font-size: 14px; font-weight: 500; }
+  .overdue-cta  { font-size: 13px; font-weight: 700; color: rgb(255,159,10); white-space: nowrap; }
+
   /* ---------- Estadísticas (panel Hoy) ---------- */
   .stats-grid { display: flex; flex-direction: column; gap: 14px; }
   .stat-head { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
@@ -731,6 +740,14 @@
       if (x.done) tdone++; else tp++;
     });
     var ttotal = tp + tdone;
+    var overdueCount = tasks.filter(function (x) { return !x.done && !x.archived && x.due && x.due < t; }).length;
+    var overdueHtml = overdueCount > 0
+      ? '<button class="overdue-banner" data-go="tareas">' +
+          '<span class="overdue-icon">⚠️</span>' +
+          '<span class="overdue-text">' + overdueCount + ' tarea' + (overdueCount === 1 ? '' : 's') + ' con fecha vencida</span>' +
+          '<span class="overdue-cta">Ver tareas →</span>' +
+        '</button>'
+      : '';
     var tareasStatus, tareasBadge, tareasProg;
     if (!ttotal) {
       tareasStatus = "No tienes tareas programadas para hoy";
@@ -936,11 +953,12 @@
       '<div class="dash-greet">' + saludo + "</div>" +
       '<div class="dash-date">'  + fecha   + "</div>" +
       summaryHtml +
+      overdueHtml +
       '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>" +
       cLogros +
       cStats;
 
-    Array.prototype.slice.call(document.querySelectorAll(".dcard[data-go]")).forEach(function (el) {
+    Array.prototype.slice.call(document.querySelectorAll(".dcard[data-go], .overdue-banner")).forEach(function (el) {
       el.addEventListener("click", function () { show(el.getAttribute("data-go")); });
     });
   }
