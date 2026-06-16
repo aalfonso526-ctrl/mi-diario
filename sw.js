@@ -2,11 +2,12 @@
    Cachea el armazón y las 4 apps para que abran sin conexión.
    Estrategia: red primero y, si falla, lo guardado en caché.
    No interfiere con el service worker propio de To-do (su ámbito es To-do/). */
-var CACHE = "diario-hub-v13";
+var CACHE = "diario-hub-v14";
 var CORE = [
   "index.html",
   "manifest.json",
   "firebase-config.js",
+  "shared/dates.js",
   "shared/theme.js",
   "shared/store.js",
   "shared/merge.js",

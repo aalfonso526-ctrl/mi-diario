@@ -358,6 +358,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="shared/dates.js"></script>
 <script src="shared/store.js"></script>
 <script src="shared/merge.js"></script>
 <script src="shared/sync.js"></script>
@@ -421,8 +422,6 @@
   }
 
   /* ---------- Utilidades ---------- */
-  function pad(n) { return n < 10 ? "0" + n : "" + n; }
-  function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
   function weekdayIdx() { return (new Date().getDay() + 6) % 7; }
   function safeParse(key, def) {
     try { var r = localStorage.getItem(key); if (r == null) return def; var v = JSON.parse(r); return v != null ? v : def; } catch (e) { return def; }
