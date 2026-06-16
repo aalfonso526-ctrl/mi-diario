@@ -48,10 +48,7 @@
   :root[data-theme="dark"] .seg { background: rgba(118,118,128,0.24); }
   :root[data-theme="dark"] .seg button.active { background: #636366; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
+  html, body { height: 100%; overflow: hidden; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
@@ -61,7 +58,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ---------- Barra superior con selector de secciones ---------- */
+  /* ---------- Barra superior ---------- */
   header.shell {
     flex-shrink: 0;
     backdrop-filter: saturate(180%) blur(20px);
@@ -83,8 +80,8 @@
     flex: 1;
     border: none;
     background: transparent;
-    padding: 9px 4px 7px;
-    font-size: 12px;
+    padding: 9px 2px 7px;
+    font-size: 11px;
     font-weight: 500;
     font-family: inherit;
     color: var(--text);
@@ -97,7 +94,7 @@
     gap: 3px;
     line-height: 1;
   }
-  .seg button .ico { font-size: 17px; line-height: 1; }
+  .seg button .ico { font-size: 16px; line-height: 1; }
   .seg button.active {
     background: var(--card);
     box-shadow: 0 1px 4px rgba(0,0,0,0.12);
@@ -105,41 +102,26 @@
   }
 
   /* ---------- Contenedor de iframes ---------- */
-  .frames {
-    position: relative;
-    flex: 1;
-    min-height: 0;
-  }
+  .frames { position: relative; flex: 1; min-height: 0; }
   .frames iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    background: var(--bg);
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border: 0; background: var(--bg);
   }
   .frames iframe.hidden { display: none; }
 
-  /* Pantalla de carga inicial */
   .splash {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    font-size: 14px;
-    background: var(--bg);
-    z-index: 5;
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); font-size: 14px;
+    background: var(--bg); z-index: 5;
   }
   .splash.gone { display: none; }
 
-  /* ---------- Panel nativo (Hoy) ---------- */
+  /* ---------- Paneles nativos (Hoy + Ajustes) ---------- */
   .panel {
-    position: absolute;
-    inset: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    position: absolute; inset: 0;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--bg);
   }
   .panel.hidden { display: none; }
@@ -157,29 +139,18 @@
     margin-top: 22px;
   }
   .dcard {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-    box-shadow: var(--shadow);
-    cursor: pointer;
-    transition: transform .15s ease, box-shadow .15s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 11px;
-    text-align: left;
-    font-family: inherit;
-    color: var(--text);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+    cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+    display: flex; flex-direction: column; gap: 11px;
+    text-align: left; font-family: inherit; color: var(--text);
   }
   .dcard:hover { transform: translateY(-2px); box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 10px 28px rgba(0,0,0,0.09); }
   .dcard-top { display: flex; align-items: center; gap: 11px; }
   .dcard-ico {
-    width: 38px; height: 38px;
-    border-radius: 11px;
+    width: 38px; height: 38px; border-radius: 11px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    background: var(--soft);
-    flex-shrink: 0;
+    font-size: 20px; background: var(--soft); flex-shrink: 0;
   }
   .dcard-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   .dcard-status { font-size: 14px; color: var(--text-secondary); line-height: 1.4; }
@@ -187,8 +158,7 @@
   .dbadge {
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 12.5px; font-weight: 600;
-    padding: 5px 11px; border-radius: 100px;
-    align-self: flex-start;
+    padding: 5px 11px; border-radius: 100px; align-self: flex-start;
   }
   .dbadge.pend { background: var(--accent-soft); color: var(--accent); }
   .dbadge.done { background: var(--green-soft); color: var(--green); }
@@ -204,14 +174,71 @@
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
   }
-  .backup-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .backup-card > p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
   .backup-btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
   .backup-btns button {
-    flex: 1; min-width: 130px; border: none; border-radius: 12px;
-    padding: 12px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s ease;
+    flex: 1; min-width: 120px; border: none; border-radius: 12px;
+    padding: 12px; font-size: 14px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all .15s ease;
   }
   .btn-fill { background: var(--accent); color: #fff; }
   .btn-soft { background: var(--soft); color: var(--text); }
+
+  /* ---------- Ajustes: filas de notificación ---------- */
+  .notif-row {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 14px;
+  }
+  .notif-row + .notif-row {
+    margin-top: 16px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .notif-info { flex: 1; }
+  .notif-label { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .notif-sub { font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; }
+  .notif-time {
+    display: block; margin-top: 10px;
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 7px 12px; font-size: 14px; font-family: inherit;
+    background: var(--bg); color: var(--text); width: 140px;
+  }
+  .notif-btn {
+    flex-shrink: 0; border: none; border-radius: 12px;
+    padding: 9px 16px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all .15s ease;
+    white-space: nowrap; margin-top: 2px;
+  }
+  .notif-btn.active { background: var(--green); color: #fff; }
+  .notif-btn.inactive { background: var(--soft); color: var(--text); }
+  .notif-btn.blocked { background: var(--soft); color: var(--text-secondary); cursor: default; }
+
+  /* ---------- Ajustes: checkboxes de sección ---------- */
+  .section-checks {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin: 14px 0 4px;
+  }
+  .check-label {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    padding: 11px 13px; border: 1px solid var(--border);
+    border-radius: 12px; transition: background .15s; user-select: none;
+  }
+  .check-label:hover { background: var(--soft); }
+  .check-label input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent); cursor: pointer;
+  }
+
+  /* ---------- Ajustes: botones de tema ---------- */
+  .theme-btns { display: flex; gap: 10px; margin-top: 14px; }
+  .theme-btn {
+    flex: 1; border: none; border-radius: 12px;
+    padding: 12px 8px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all .15s ease;
+    background: var(--soft); color: var(--text);
+  }
+  .theme-btn.active { background: var(--accent); color: #fff; }
+
   .toast {
     position: fixed; left: 50%; bottom: 30px;
     transform: translateX(-50%) translateY(20px);
@@ -233,15 +260,94 @@
     <button data-key="ejercicio"><span class="ico">🏋️</span>Ejercicio</button>
     <button data-key="movilidad"><span class="ico">🧘</span>Movilidad</button>
     <button data-key="ingles"><span class="ico">🇬🇧</span>Inglés</button>
+    <button data-key="ajustes"><span class="ico">⚙️</span>Ajustes</button>
   </div>
 </header>
 
 <div class="frames" id="frames">
   <div class="splash gone" id="splash">Cargando…</div>
+
+  <!-- Panel Hoy (solo tarjetas de resumen, sin respaldo ni sync) -->
   <div class="panel" id="panel-hoy"><div class="dash" id="dash"></div></div>
-  <iframe data-key="tareas"    data-src="To-do/index.html"                  title="Tareas"    class="hidden"></iframe>
-  <iframe data-key="ejercicio" data-src="Ejercicio/entrenamientos.html"     title="Ejercicio" class="hidden"></iframe>
-  <iframe data-key="movilidad" data-src="Movilidad/index.html"              title="Movilidad" class="hidden"></iframe>
+
+  <!-- Panel Ajustes -->
+  <div class="panel hidden" id="panel-ajustes">
+    <div class="dash">
+      <div class="dash-greet">Ajustes</div>
+
+      <!-- Sincronización -->
+      <div class="dash-h">Sincronización</div>
+      <div class="backup-card">
+        <p id="ajCloudStatus">Cargando…</p>
+        <div class="backup-btns">
+          <button id="ajBtnCloud" class="btn-fill">🔄 Activar sincronización</button>
+        </div>
+      </div>
+
+      <!-- Apariencia -->
+      <div class="dash-h">Apariencia</div>
+      <div class="backup-card">
+        <p>Tema de la aplicación. «Auto» sigue la preferencia del sistema.</p>
+        <div class="theme-btns">
+          <button class="theme-btn" data-tp="auto"  id="ajThemeAuto">☀️🌙 Auto</button>
+          <button class="theme-btn" data-tp="light" id="ajThemeLight">☀️ Claro</button>
+          <button class="theme-btn" data-tp="dark"  id="ajThemeDark">🌙 Oscuro</button>
+        </div>
+      </div>
+
+      <!-- Notificaciones -->
+      <div class="dash-h">Notificaciones</div>
+      <div class="backup-card">
+        <!-- Recordatorios de Tareas -->
+        <div class="notif-row">
+          <div class="notif-info">
+            <div class="notif-label">Recordatorios de Tareas</div>
+            <div class="notif-sub" id="ajRemTareasStatus"></div>
+            <input type="time" id="ajRemTareasHora" class="notif-time">
+          </div>
+          <button class="notif-btn inactive" id="ajRemTareasBtn">Activar</button>
+        </div>
+        <!-- Recordatorio diario de Inglés -->
+        <div class="notif-row">
+          <div class="notif-info">
+            <div class="notif-label">Recordatorio diario de Inglés</div>
+            <div class="notif-sub" id="ajRemInglesStatus"></div>
+            <input type="time" id="ajRemInglesHora" class="notif-time">
+          </div>
+          <button class="notif-btn inactive" id="ajRemInglesBtn">Activar</button>
+        </div>
+      </div>
+
+      <!-- Exportar calendario -->
+      <div class="dash-h">Exportar calendario</div>
+      <div class="backup-card">
+        <p>Exporta las tareas con fecha límite a un archivo .ics compatible con Google Calendar, Apple Calendar y otros.</p>
+        <div class="backup-btns">
+          <button class="btn-soft" id="ajIcsBtn">📅 Exportar .ics</button>
+        </div>
+      </div>
+
+      <!-- Respaldo de datos -->
+      <div class="dash-h">Respaldo de datos</div>
+      <div class="backup-card">
+        <p>Selecciona las secciones que quieres exportar o importa un respaldo guardado anteriormente.</p>
+        <div class="section-checks">
+          <label class="check-label"><input type="checkbox" value="tareas"    checked> ✅ Tareas</label>
+          <label class="check-label"><input type="checkbox" value="ejercicio" checked> 🏋️ Ejercicio</label>
+          <label class="check-label"><input type="checkbox" value="movilidad" checked> 🧘 Movilidad</label>
+          <label class="check-label"><input type="checkbox" value="ingles"    checked> 🇬🇧 Inglés</label>
+        </div>
+        <div class="backup-btns">
+          <button class="btn-fill" id="ajExportSel">⬇ Exportar selección</button>
+          <button class="btn-soft" id="ajImport">⬆ Importar respaldo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <iframe data-key="tareas"    data-src="To-do/index.html"                title="Tareas"    class="hidden"></iframe>
+  <iframe data-key="ejercicio" data-src="Ejercicio/entrenamientos.html"   title="Ejercicio" class="hidden"></iframe>
+  <iframe data-key="movilidad" data-src="Movilidad/index.html"            title="Movilidad" class="hidden"></iframe>
   <iframe data-key="ingles"    data-src="plan-ingles/estudio-ingles.html" title="Inglés"    class="hidden"></iframe>
 </div>
 
@@ -259,25 +365,24 @@
 (function () {
   "use strict";
   var STORE = "hub-section";
-  var frames = Array.prototype.slice.call(document.querySelectorAll("#frames iframe"));
-  var buttons = Array.prototype.slice.call(document.querySelectorAll("#seg button"));
-  var splash = document.getElementById("splash");
+  var frames   = Array.prototype.slice.call(document.querySelectorAll("#frames iframe"));
+  var buttons  = Array.prototype.slice.call(document.querySelectorAll("#seg button"));
+  var splash   = document.getElementById("splash");
+  var panelHoy     = document.getElementById("panel-hoy");
+  var panelAjustes = document.getElementById("panel-ajustes");
   var loaded = {};
   var cloudReady = false;
 
-  /* Qué iframe recargar cuando la nube actualiza cada clave de datos. */
   var KEY_TO_SECTION = {
-    "todo-app-v1": "tareas",
+    "todo-app-v1":          "tareas",
     "entreno_historial_v1": "ejercicio",
-    "entreno_cfg_v1": "ejercicio",
-    "entreno_draft_v1": "ejercicio",
-    "movilidad-progress": "movilidad",
-    "planIngles_v1": "ingles"
+    "entreno_cfg_v1":       "ejercicio",
+    "entreno_draft_v1":     "ejercicio",
+    "movilidad-progress":   "movilidad",
+    "planIngles_v1":        "ingles"
   };
 
-  /* ---------- Tema: todas las secciones siguen el de To-do ----------
-     To-do guarda su preferencia (auto/claro/oscuro) en localStorage["todo-theme"].
-     El shell calcula el tema efectivo y lo propaga a cada iframe. */
+  /* ---------- Tema ---------- */
   var THEME_KEY = "todo-theme";
   var darkMq = window.matchMedia("(prefers-color-scheme: dark)");
   function effectiveTheme() {
@@ -286,9 +391,7 @@
     return pref === "auto" ? (darkMq.matches ? "dark" : "light") : pref;
   }
   function pushTheme(f, eff) {
-    /* Inyección directa al DOM (funciona en http, mismo origen). */
     try { if (f.contentDocument && f.contentDocument.documentElement) f.contentDocument.documentElement.setAttribute("data-theme", eff); } catch (e) {}
-    /* postMessage: canal que cruza marcos incluso al abrir como archivo (file://). */
     try { if (f.contentWindow) f.contentWindow.postMessage({ type: "set-theme", theme: eff }, "*"); } catch (e) {}
   }
   function applyTheme() {
@@ -299,16 +402,13 @@
     frames.forEach(function (f) { pushTheme(f, eff); });
   }
   darkMq.addEventListener("change", applyTheme);
-  /* Cuando To-do cambia su tema, escribe en localStorage y dispara 'storage' en el resto. */
+
   window.addEventListener("storage", function (e) {
-    if (!e || e.key === THEME_KEY) applyTheme();
-    /* Una sección (iframe) cambió sus datos: avisa a la sincronización. */
+    if (!e || e.key === THEME_KEY) { applyTheme(); updateThemeUI(); }
     if (e && e.key && cloudReady) window.DiarioSync.notifyLocalChange(e.key);
-    /* Si el panel Hoy está visible y una sección cambió sus datos, refréscalo. */
     if (!panelHoy.classList.contains("hidden")) renderDash();
   });
 
-  /* La nube aplicó cambios remotos: recarga solo las secciones afectadas. */
   function applyRemoteChanges(keys) {
     var sections = {};
     keys.forEach(function (k) { var s = KEY_TO_SECTION[k]; if (s) sections[s] = 1; });
@@ -320,20 +420,20 @@
     if (!panelHoy.classList.contains("hidden")) renderDash();
   }
 
-  /* ---------- Pantalla "Hoy" (dashboard) + Respaldo ----------
-     En el mismo origen (http/https), el shell comparte localStorage con los
-     iframes, así que puede leer los datos de las cuatro secciones directamente. */
-  var panelHoy = document.getElementById("panel-hoy");
+  /* ---------- Utilidades ---------- */
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
   function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
-  function weekdayIdx() { return (new Date().getDay() + 6) % 7; } // lunes = 0
-  function safeParse(key, def) { try { var r = localStorage.getItem(key); if (r == null) return def; var v = JSON.parse(r); return v != null ? v : def; } catch (e) { return def; } }
+  function weekdayIdx() { return (new Date().getDay() + 6) % 7; }
+  function safeParse(key, def) {
+    try { var r = localStorage.getItem(key); if (r == null) return def; var v = JSON.parse(r); return v != null ? v : def; } catch (e) { return def; }
+  }
 
-  var DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-  var MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-  var MOV_REQUIRED = [3, 2, 3, 2, 3, 2, 1]; // videos obligatorios por día (lun→dom)
+  var DIAS  = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+  var MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  var MOV_REQUIRED = [3, 2, 3, 2, 3, 2, 1];
 
   function ejWeek(cfg) {
+    if (!cfg) return 1;
     if (cfg.week) return cfg.week;
     if (cfg.startDate) {
       var ini = new Date(cfg.startDate + "T00:00:00");
@@ -343,115 +443,68 @@
     return 1;
   }
   function mondayDate() {
-    var d = new Date(); var m = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var d = new Date(), m = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     m.setDate(m.getDate() - weekdayIdx());
     return m;
   }
 
+  /* ---------- Panel Hoy (solo resumen de secciones) ---------- */
   function renderDash() {
     var now = new Date(), t = todayStr();
     var hour = now.getHours();
     var saludo = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
     var fecha = DIAS[now.getDay()] + ", " + now.getDate() + " de " + MESES[now.getMonth()];
 
-    // ----- Tareas -----
-    var todo = safeParse("todo-app-v1", { tasks: [] }), tasks = todo.tasks || [], seen = {}, tp = 0;
+    var todo  = safeParse("todo-app-v1", { tasks: [] }), tasks = todo.tasks || [], seen = {}, tp = 0;
     tasks.forEach(function (x) {
       if (x.done) return;
       var hit = (x.category === "daily") || (x.due && x.due <= t);
       if (hit && !seen[x.id]) { seen[x.id] = 1; tp++; }
     });
     var cTareas = card("tareas", "✅", "Tareas",
-      tp ? "Tienes <strong>" + tp + "</strong> tarea" + (tp > 1 ? "s" : "") + " para hoy" : "No tienes tareas pendientes para hoy. 🎉",
+      tp ? "Tienes <strong>" + tp + "</strong> tarea" + (tp > 1 ? "s" : "") + " para hoy"
+         : "No tienes tareas pendientes para hoy. 🎉",
       tp ? badge("pend", tp + " pendiente" + (tp > 1 ? "s" : "")) : badge("done", "Al día ✓"), "");
 
-    // ----- Ejercicio -----
-    var cfg = safeParse("entreno_cfg_v1", {}), hist = safeParse("entreno_historial_v1", []), draft = safeParse("entreno_draft_v1", null);
-    var week = ejWeek(cfg), mon = mondayDate();
-    var ejToday = hist.some(function (s) { return (s.fecha || "").slice(0, 10) === t; });
-    var ejWeekN = hist.filter(function (s) { return new Date(s.fecha) >= mon; }).length;
+    var cfg   = safeParse("entreno_cfg_v1", {}), hist = safeParse("entreno_historial_v1", []), draft = safeParse("entreno_draft_v1", null);
+    var week  = ejWeek(cfg), mon = mondayDate();
+    var ejToday  = hist.some(function (s) { return (s.fecha || "").slice(0, 10) === t; });
+    var ejWeekN  = hist.filter(function (s) { return new Date(s.fecha) >= mon; }).length;
     var ejStatus, ejBadge;
-    if (draft) { ejStatus = "Tienes una <strong>sesión en curso</strong> sin terminar"; ejBadge = badge("pend", "En curso"); }
+    if (draft)        { ejStatus = "Tienes una <strong>sesión en curso</strong> sin terminar"; ejBadge = badge("pend", "En curso"); }
     else if (ejToday) { ejStatus = "Semana <strong>" + week + "/12</strong> · " + ejWeekN + " esta semana"; ejBadge = badge("done", "Entrenado hoy ✓"); }
-    else { ejStatus = "Semana <strong>" + week + "/12</strong> · " + ejWeekN + " entrenamiento" + (ejWeekN === 1 ? "" : "s") + " esta semana"; ejBadge = badge("pend", "Sin entrenar hoy"); }
+    else              { ejStatus = "Semana <strong>" + week + "/12</strong> · " + ejWeekN + " entrenamiento" + (ejWeekN === 1 ? "" : "s") + " esta semana"; ejBadge = badge("pend", "Sin entrenar hoy"); }
     var cEjercicio = card("ejercicio", "🏋️", "Ejercicio", ejStatus, ejBadge, "");
 
-    // ----- Movilidad -----
     var mov = safeParse("movilidad-progress", {}), mreq = MOV_REQUIRED[weekdayIdx()];
     var mdone = Math.min((mov[t] || []).length, mreq);
-    var mFull = mdone >= mreq;
     var cMovilidad = card("movilidad", "🧘", "Movilidad",
       "Sesión de hoy: <strong>" + mdone + "/" + mreq + "</strong> videos",
-      mFull ? badge("done", "Completo ✓") : badge("pend", (mreq - mdone) + " video" + (mreq - mdone > 1 ? "s" : "")),
+      mdone >= mreq ? badge("done", "Completo ✓") : badge("pend", (mreq - mdone) + " video" + (mreq - mdone > 1 ? "s" : "")),
       prog(mdone, mreq));
 
-    // ----- Inglés -----
     var ing = safeParse("planIngles_v1", { dias: {} });
     var ichecks = (ing.dias && ing.dias[t]) || [], idone = ichecks.filter(Boolean).length;
-    var iFull = idone >= 6;
     var cIngles = card("ingles", "🇬🇧", "Inglés",
       "Bloques de hoy: <strong>" + idone + "/6</strong>",
-      iFull ? badge("done", "Completo ✓") : badge("pend", (6 - idone) + " bloque" + (6 - idone > 1 ? "s" : "")),
+      idone >= 6 ? badge("done", "Completo ✓") : badge("pend", (6 - idone) + " bloque" + (6 - idone > 1 ? "s" : "")),
       prog(idone, 6));
 
     document.getElementById("dash").innerHTML =
       '<div class="dash-greet">' + saludo + "</div>" +
-      '<div class="dash-date">' + fecha + "</div>" +
-      '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>" +
-      cloudCardHtml() +
-      '<div class="dash-h">Datos y respaldo</div>' +
-      '<div class="backup-card">' +
-        "<p>Exporta un respaldo de las cuatro secciones y guárdalo a salvo; podrás importarlo en otro dispositivo o si reinstalas.</p>" +
-        '<div class="backup-btns">' +
-          '<button class="btn-fill" id="btnExport">⬇ Exportar respaldo</button>' +
-          '<button class="btn-soft" id="btnImport">⬆ Importar respaldo</button>' +
-        "</div>" +
-      "</div>";
+      '<div class="dash-date">'  + fecha   + "</div>" +
+      '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>";
 
     Array.prototype.slice.call(document.querySelectorAll(".dcard[data-go]")).forEach(function (el) {
       el.addEventListener("click", function () { show(el.getAttribute("data-go")); });
     });
-    document.getElementById("btnExport").addEventListener("click", exportAll);
-    document.getElementById("btnImport").addEventListener("click", function () { document.getElementById("importFile").click(); });
-    var btnCloud = document.getElementById("btnCloud");
-    if (btnCloud) {
-      btnCloud.addEventListener("click", function () {
-        if (window.DiarioSync.currentUser()) {
-          if (confirm("¿Cerrar sesión? La app seguirá funcionando con los datos de este dispositivo.")) window.DiarioSync.logout();
-        } else { window.DiarioSync.login(); }
-      });
-      updateCloudUI();
-    }
-  }
-
-  /* Tarjeta de sincronización (solo si Firebase está disponible). */
-  function cloudCardHtml() {
-    if (!cloudReady) return "";
-    return '<div class="dash-h">Sincronización</div>' +
-      '<div class="backup-card">' +
-        '<p id="cloudStatus"></p>' +
-        '<div class="backup-btns"><button id="btnCloud"></button></div>' +
-      "</div>";
-  }
-  function updateCloudUI() {
-    var status = document.getElementById("cloudStatus"), btn = document.getElementById("btnCloud");
-    if (!status || !btn) return;
-    var u = cloudReady ? window.DiarioSync.currentUser() : null;
-    if (u) {
-      status.textContent = "Sincronizando las 4 secciones como " + (u.email || "tu cuenta") + ". Tus datos se respaldan en la nube y se combinan entre dispositivos.";
-      btn.textContent = "Cerrar sesión"; btn.className = "btn-soft";
-    } else {
-      status.textContent = "Inicia sesión con Google para respaldar y combinar automáticamente las 4 secciones entre tus dispositivos.";
-      btn.textContent = "🔄 Activar sincronización"; btn.className = "btn-fill";
-    }
   }
 
   function card(go, ico, title, statusHtml, badgeHtml, progHtml) {
     return '<button class="dcard" data-go="' + go + '">' +
       '<div class="dcard-top"><div class="dcard-ico">' + ico + '</div><div class="dcard-title">' + title + "</div></div>" +
       '<div class="dcard-status">' + statusHtml + "</div>" +
-      progHtml + badgeHtml +
-      "</button>";
+      progHtml + badgeHtml + "</button>";
   }
   function badge(cls, txt) { return '<span class="dbadge ' + cls + '">' + txt + "</span>"; }
   function prog(done, total) {
@@ -459,29 +512,265 @@
     return '<div class="dprog"><div class="' + (done >= total ? "full" : "") + '" style="width:' + pct + '%"></div></div>';
   }
 
-  /* ---------- Respaldo: exporta/importa TODO el localStorage del origen ---------- */
-  function exportAll() {
+  /* ---------- Panel Ajustes ---------- */
+
+  /* — Sincronización — */
+  function updateCloudUI() {
+    var status = document.getElementById("ajCloudStatus");
+    var btn    = document.getElementById("ajBtnCloud");
+    if (!status || !btn) return;
+    var u = cloudReady ? window.DiarioSync.currentUser() : null;
+    if (!cloudReady) {
+      status.textContent = "La sincronización no está disponible en este momento.";
+      btn.textContent = ""; btn.style.display = "none";
+    } else if (u) {
+      status.textContent = "Sincronizando las 4 secciones como " + (u.email || "tu cuenta") + ".";
+      btn.textContent = "Cerrar sesión"; btn.className = "btn-soft"; btn.style.display = "";
+    } else {
+      status.textContent = "Inicia sesión con Google para respaldar y combinar automáticamente tus 4 secciones entre dispositivos.";
+      btn.textContent = "🔄 Activar sincronización"; btn.className = "btn-fill"; btn.style.display = "";
+    }
+  }
+  document.getElementById("ajBtnCloud").addEventListener("click", function () {
+    if (!cloudReady) return;
+    if (window.DiarioSync.currentUser()) {
+      if (confirm("¿Cerrar sesión? La app seguirá funcionando con los datos de este dispositivo.")) window.DiarioSync.logout();
+    } else { window.DiarioSync.login(); }
+  });
+
+  /* — Tema — */
+  function updateThemeUI() {
+    var pref = "auto";
+    try { pref = localStorage.getItem(THEME_KEY) || "auto"; } catch (e) {}
+    ["auto", "light", "dark"].forEach(function (p) {
+      var id = "ajTheme" + p.charAt(0).toUpperCase() + p.slice(1);
+      var btn = document.getElementById(id);
+      if (btn) btn.className = "theme-btn" + (p === pref ? " active" : "");
+    });
+  }
+  ["Auto", "Light", "Dark"].forEach(function (name) {
+    var btn = document.getElementById("ajTheme" + name);
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      try { localStorage.setItem(THEME_KEY, name.toLowerCase()); } catch (e) {}
+      applyTheme();
+      updateThemeUI();
+    });
+  });
+
+  /* — Notificaciones — */
+  var NOTIF_PERM = "Notification" in window ? Notification.permission : "denied";
+
+  function notifPermText() {
+    if (!("Notification" in window)) return "Tu navegador no soporta notificaciones.";
+    if (Notification.permission === "denied") return "Notificaciones bloqueadas en el navegador. Habilítalas en Configuración del sitio.";
+    if (Notification.permission === "granted") return "Notificaciones permitidas ✓";
+    return "Toca Activar para permitir notificaciones.";
+  }
+
+  /* Tareas reminders: { enabled, time } en localStorage["todo-reminders"] */
+  function getTareasRem() { return safeParse("todo-reminders", { enabled: false, time: "09:00" }); }
+  function saveTareasRem(enabled, time) {
+    var rem = getTareasRem();
+    rem.enabled = enabled; rem.time = time;
+    try { localStorage.setItem("todo-reminders", JSON.stringify(rem)); } catch (e) {}
+  }
+
+  /* Inglés reminder: campo recordatorio dentro de planIngles_v1 */
+  function getInglesRem() {
+    var ing = safeParse("planIngles_v1", {});
+    return (ing && ing.recordatorio) ? ing.recordatorio : { on: false, hora: "19:00" };
+  }
+  function saveInglesRem(enabled, hora) {
+    var raw = localStorage.getItem("planIngles_v1");
+    var ing = null;
+    try { if (raw) ing = JSON.parse(raw); } catch (e) {}
+    if (!ing || typeof ing !== "object" || Array.isArray(ing)) return;
+    ing.recordatorio = { on: enabled, hora: hora, lastNotif: (ing.recordatorio && ing.recordatorio.lastNotif) || null };
+    try { localStorage.setItem("planIngles_v1", JSON.stringify(ing)); } catch (e) {}
+  }
+
+  function requestNotifPermission(cb) {
+    if (!("Notification" in window)) { cb(false); return; }
+    if (Notification.permission === "granted") { cb(true); return; }
+    if (Notification.permission === "denied")  { cb(false); return; }
+    Notification.requestPermission().then(function (p) {
+      NOTIF_PERM = p;
+      cb(p === "granted");
+      updateNotifUI();
+    });
+  }
+
+  function updateNotifUI() {
+    var tareasRem = getTareasRem();
+    var inglesRem = getInglesRem();
+    var perm = "Notification" in window ? Notification.permission : "denied";
+
+    /* Tareas */
+    var tStatus = document.getElementById("ajRemTareasStatus");
+    var tBtn    = document.getElementById("ajRemTareasBtn");
+    var tHora   = document.getElementById("ajRemTareasHora");
+    if (tStatus && tBtn && tHora) {
+      tHora.value = tareasRem.time || "09:00";
+      if (perm === "denied") {
+        tStatus.textContent = "Bloqueadas en el navegador.";
+        tBtn.textContent = "Bloqueadas"; tBtn.className = "notif-btn blocked";
+        tHora.style.display = "none";
+      } else if (tareasRem.enabled && perm === "granted") {
+        tStatus.textContent = "Activas — hora: " + (tareasRem.time || "09:00");
+        tBtn.textContent = "Desactivar"; tBtn.className = "notif-btn active";
+        tHora.style.display = "block";
+      } else {
+        tStatus.textContent = perm === "granted" ? "Desactivadas." : "Se pedirá permiso al activar.";
+        tBtn.textContent = "Activar"; tBtn.className = "notif-btn inactive";
+        tHora.style.display = "none";
+      }
+    }
+
+    /* Inglés */
+    var iStatus = document.getElementById("ajRemInglesStatus");
+    var iBtn    = document.getElementById("ajRemInglesBtn");
+    var iHora   = document.getElementById("ajRemInglesHora");
+    if (iStatus && iBtn && iHora) {
+      iHora.value = inglesRem.hora || "19:00";
+      if (perm === "denied") {
+        iStatus.textContent = "Bloqueadas en el navegador.";
+        iBtn.textContent = "Bloqueadas"; iBtn.className = "notif-btn blocked";
+        iHora.style.display = "none";
+      } else if (inglesRem.on && perm === "granted") {
+        iStatus.textContent = "Activo — hora: " + (inglesRem.hora || "19:00");
+        iBtn.textContent = "Desactivar"; iBtn.className = "notif-btn active";
+        iHora.style.display = "block";
+      } else {
+        iStatus.textContent = perm === "granted" ? "Desactivado." : "Se pedirá permiso al activar.";
+        iBtn.textContent = "Activar"; iBtn.className = "notif-btn inactive";
+        iHora.style.display = "none";
+      }
+    }
+  }
+
+  document.getElementById("ajRemTareasBtn").addEventListener("click", function () {
+    var rem = getTareasRem();
+    var hora = document.getElementById("ajRemTareasHora").value || "09:00";
+    if (rem.enabled) {
+      saveTareasRem(false, hora);
+      updateNotifUI();
+    } else {
+      requestNotifPermission(function (ok) {
+        if (ok) { saveTareasRem(true, hora); updateNotifUI(); }
+      });
+    }
+  });
+  document.getElementById("ajRemTareasHora").addEventListener("change", function () {
+    var rem = getTareasRem();
+    if (rem.enabled) saveTareasRem(true, this.value);
+  });
+
+  document.getElementById("ajRemInglesBtn").addEventListener("click", function () {
+    var rem = getInglesRem();
+    var hora = document.getElementById("ajRemInglesHora").value || "19:00";
+    if (rem.on) {
+      saveInglesRem(false, hora);
+      updateNotifUI();
+    } else {
+      requestNotifPermission(function (ok) {
+        if (ok) { saveInglesRem(true, hora); updateNotifUI(); }
+      });
+    }
+  });
+  document.getElementById("ajRemInglesHora").addEventListener("change", function () {
+    var rem = getInglesRem();
+    if (rem.on) saveInglesRem(true, this.value);
+  });
+
+  /* — Exportar calendario ICS — */
+  function icsEscape(s) {
+    return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  }
+  function exportICS() {
+    var todo  = safeParse("todo-app-v1", { tasks: [], goals: [] });
+    var tasks = todo.tasks || [], goals = todo.goals || [];
+    var items = [], stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    function addEvent(uid, dueStr, summary, desc) {
+      var p = dueStr.split("-");
+      var d0 = p[0] + p[1] + p[2];
+      var nd = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10) + 1);
+      var d1 = nd.getFullYear() + "" + pad(nd.getMonth() + 1) + "" + pad(nd.getDate());
+      items.push("BEGIN:VEVENT", "UID:" + uid + "@midiario", "DTSTAMP:" + stamp,
+        "DTSTART;VALUE=DATE:" + d0, "DTEND;VALUE=DATE:" + d1, "SUMMARY:" + icsEscape(summary));
+      if (desc) items.push("DESCRIPTION:" + icsEscape(desc));
+      items.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEscape(summary),
+        "TRIGGER;RELATED=START:PT9H", "END:VALARM", "END:VEVENT");
+    }
+    tasks.forEach(function (t) { if (t.due && !t.done) addEvent(t.id, t.due, t.title, t.notes || ""); });
+    goals.forEach(function (g) { if (g.due && g.progress < 100) addEvent(g.id, g.due, "🎯 " + g.title, g.notes || ""); });
+    if (!items.length) { toast("No hay tareas con fecha límite para exportar"); return; }
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Mi Diario//ES",
+      "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Mis Tareas"]
+      .concat(items, ["END:VCALENDAR"]);
+    var blob = new Blob([lines.join("\r\n")], { type: "text/calendar" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "mis-tareas-" + todayStr() + ".ics";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    toast("Calendario exportado");
+  }
+  document.getElementById("ajIcsBtn").addEventListener("click", exportICS);
+
+  /* — Respaldo selectivo — */
+  var SECTION_KEYS = {
+    tareas:    ["todo-app-v1"],
+    ejercicio: ["entreno_historial_v1", "entreno_cfg_v1", "entreno_draft_v1"],
+    movilidad: ["movilidad-progress"],
+    ingles:    ["planIngles_v1"]
+  };
+
+  function exportSections(sections) {
     var data = {};
-    for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); data[k] = localStorage.getItem(k); }
+    sections.forEach(function (sec) {
+      (SECTION_KEYS[sec] || []).forEach(function (k) {
+        var v = localStorage.getItem(k);
+        if (v != null) data[k] = v;
+      });
+    });
+    var meta = localStorage.getItem("__diario_meta");
+    if (meta) data["__diario_meta"] = meta;
+    if (!Object.keys(data).length) { toast("No hay datos para exportar"); return; }
+    var prefix = sections.length === 4 ? "" : sections.join("-") + "-";
     var payload = { _app: "mi-diario-backup", _version: 1, _date: new Date().toISOString(), data: data };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "mi-diario-respaldo-" + todayStr() + ".json";
+    a.download = "mi-diario-respaldo-" + prefix + todayStr() + ".json";
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     toast("Respaldo exportado");
   }
-  document.getElementById("importFile").addEventListener("change", function () {
-    var file = this.files && this.files[0];
-    if (file) importAll(file);
-    this.value = "";
+
+  function selectedSections() {
+    return Array.prototype.slice.call(document.querySelectorAll(".section-checks input:checked"))
+      .map(function (el) { return el.value; });
+  }
+
+  document.getElementById("ajExportSel").addEventListener("click", function () {
+    var sel = selectedSections();
+    if (!sel.length) { toast("Selecciona al menos una sección"); return; }
+    exportSections(sel);
   });
-  /* Validación de las claves de datos conocidas: un respaldo corrupto no debe
-     poder sobrescribir una sección con basura. Las claves de datos se parsean
-     y se comprueba su forma; si fallan, se descartan (no se escribe esa clave).
-     Las claves desconocidas (ajustes pequeños) se aceptan solo si son cadenas
-     cortas. */
+
+  document.getElementById("ajImport").addEventListener("click", function () {
+    document.getElementById("importFile").click();
+  });
+
+  /* — Actualiza todo el panel de ajustes — */
+  function updateSettingsUI() {
+    updateCloudUI();
+    updateThemeUI();
+    updateNotifUI();
+  }
+
+  /* ---------- Importar respaldo (desde ajustes) ---------- */
   var KNOWN_SHAPES = {
     "todo-app-v1":          function (v) { return v && Array.isArray(v.tasks) && Array.isArray(v.goals); },
     "entreno_historial_v1": function (v) { return Array.isArray(v); },
@@ -513,17 +802,20 @@
       if (!data || typeof data !== "object") { alert("El archivo no es un respaldo válido de Mi Diario."); return; }
       var r = sanitizeBackup(data);
       if (!r.dataKeys) { alert("El archivo no contiene datos válidos de ninguna sección de Mi Diario."); return; }
-      var aviso = "Esto reemplazará los datos actuales de las cuatro secciones con los del respaldo.";
+      var aviso = "Esto reemplazará los datos actuales con los del respaldo.";
       if (r.rejected) aviso += "\n\n(" + r.rejected + " entrada" + (r.rejected > 1 ? "s" : "") + " inválida" + (r.rejected > 1 ? "s" : "") + " se omitirá" + (r.rejected > 1 ? "n" : "") + ".)";
       if (!confirm(aviso + "\n\n¿Continuar?")) return;
       Object.keys(r.clean).forEach(function (k) { try { localStorage.setItem(k, r.clean[k]); } catch (e) {} });
       toast("Respaldo importado");
-      reloadFrames();
-      applyTheme();
-      renderDash();
+      reloadFrames(); applyTheme(); renderDash();
     };
     rd.readAsText(file);
   }
+  document.getElementById("importFile").addEventListener("change", function () {
+    var file = this.files && this.files[0];
+    if (file) importAll(file);
+    this.value = "";
+  });
   function reloadFrames() {
     frames.forEach(function (f) {
       if (loaded[f.dataset.key]) {
@@ -531,6 +823,8 @@
       }
     });
   }
+
+  /* ---------- Toast ---------- */
   function toast(msg) {
     var el = document.getElementById("toast");
     el.textContent = msg;
@@ -539,14 +833,17 @@
     toast._t = setTimeout(function () { el.classList.remove("show"); }, 2200);
   }
 
+  /* ---------- Navegación entre secciones ---------- */
   function show(key) {
     buttons.forEach(function (b) { b.classList.toggle("active", b.dataset.key === key); });
-    var isHoy = key === "hoy";
+    var isHoy     = key === "hoy";
+    var isAjustes = key === "ajustes";
     panelHoy.classList.toggle("hidden", !isHoy);
+    panelAjustes.classList.toggle("hidden", !isAjustes);
     frames.forEach(function (f) {
-      var active = !isHoy && f.dataset.key === key;
+      var active = !isHoy && !isAjustes && f.dataset.key === key;
       f.classList.toggle("hidden", !active);
-      if (active && !loaded[key]) {            // carga perezosa la primera vez
+      if (active && !loaded[key]) {
         loaded[key] = true;
         f.addEventListener("load", function () {
           splash.classList.add("gone");
@@ -557,7 +854,8 @@
         pushTheme(f, effectiveTheme());
       }
     });
-    if (isHoy) { splash.classList.add("gone"); renderDash(); }
+    if (isHoy)     { splash.classList.add("gone"); renderDash(); }
+    else if (isAjustes) { splash.classList.add("gone"); updateSettingsUI(); }
     else if (loaded[key]) splash.classList.add("gone");
     else splash.classList.remove("gone");
     try { localStorage.setItem(STORE, key); } catch (e) {}
@@ -567,37 +865,33 @@
     b.addEventListener("click", function () { show(b.dataset.key); });
   });
 
-  /* ---------- Sincronización en la nube (centralizada en el hub) ----------
-     Solo se inicializa Firebase; nada se escribe en la nube hasta que el
-     usuario inicia sesión. La fusión de cada snapshot es conservadora. */
+  /* ---------- Sincronización en la nube ---------- */
   if (window.FIREBASE_CONFIG && window.DiarioSync) {
     cloudReady = window.DiarioSync.init({
       config: window.FIREBASE_CONFIG,
-      onAuthChange: function () { if (!panelHoy.classList.contains("hidden")) renderDash(); },
+      onAuthChange: function () {
+        if (!panelHoy.classList.contains("hidden")) renderDash();
+        if (!panelAjustes.classList.contains("hidden")) updateCloudUI();
+      },
       onApplied: applyRemoteChanges
     });
   }
 
   var start = "hoy";
   try { var saved = localStorage.getItem(STORE); if (saved) start = saved; } catch (e) {}
-  var valid = start === "hoy" || frames.some(function (f) { return f.dataset.key === start; });
+  var valid = start === "hoy" || start === "ajustes" || frames.some(function (f) { return f.dataset.key === start; });
   if (!valid) start = "hoy";
   applyTheme();
   show(start);
 
+  /* ---------- Service Worker ---------- */
   if ("serviceWorker" in navigator) {
     var refreshing = false;
-    /* Cuando un service worker nuevo toma el control, recarga una vez para
-       servir los archivos actualizados (evita quedarse con caché vieja). */
     navigator.serviceWorker.addEventListener("controllerchange", function () {
-      if (refreshing) return;
-      refreshing = true;
-      location.reload();
+      if (refreshing) return; refreshing = true; location.reload();
     });
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("sw.js").then(function (reg) {
-        reg.update();
-      }).catch(function () {});
+      navigator.serviceWorker.register("sw.js").then(function (reg) { reg.update(); }).catch(function () {});
     });
   }
 })();
