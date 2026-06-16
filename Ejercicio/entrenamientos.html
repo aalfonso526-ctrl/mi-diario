@@ -508,9 +508,12 @@ const LS_HIST = "entreno_historial_v1";
 const LS_DRAFT = "entreno_draft_v1";
 const LS_CFG = "entreno_cfg_v1";
 
-let historial = JSON.parse(localStorage.getItem(LS_HIST) || "[]");
-let cfg = JSON.parse(localStorage.getItem(LS_CFG) || "{}");
-let draft = JSON.parse(localStorage.getItem(LS_DRAFT) || "null");
+function _load(key, def) {
+  try { var v = JSON.parse(localStorage.getItem(key)); return v != null ? v : def; } catch(e) { return def; }
+}
+let historial = _load(LS_HIST, []);
+let cfg       = _load(LS_CFG,  {});
+let draft     = _load(LS_DRAFT, null);
 
 function saveHist(){ localStorage.setItem(LS_HIST, JSON.stringify(historial)); }
 function saveCfg(){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
