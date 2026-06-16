@@ -454,26 +454,42 @@
     var saludo = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
     var fecha = DIAS[now.getDay()] + ", " + now.getDate() + " de " + MESES[now.getMonth()];
 
-    var todo  = safeParse("todo-app-v1", { tasks: [] }), tasks = todo.tasks || [], seen = {}, tp = 0;
+    var todo  = safeParse("todo-app-v1", { tasks: [] }), tasks = todo.tasks || [], seen = {}, tp = 0, tdone = 0;
     tasks.forEach(function (x) {
-      if (x.done) return;
+      if (x.archived) return;
       var hit = (x.category === "daily") || (x.due && x.due <= t);
-      if (hit && !seen[x.id]) { seen[x.id] = 1; tp++; }
+      if (!hit || seen[x.id]) return;
+      seen[x.id] = 1;
+      if (x.done) tdone++; else tp++;
     });
-    var cTareas = card("tareas", "✅", "Tareas",
-      tp ? "Tienes <strong>" + tp + "</strong> tarea" + (tp > 1 ? "s" : "") + " para hoy"
-         : "No tienes tareas pendientes para hoy. 🎉",
-      tp ? badge("pend", tp + " pendiente" + (tp > 1 ? "s" : "")) : badge("done", "Al día ✓"), "");
+    var ttotal = tp + tdone;
+    var tareasStatus, tareasBadge, tareasProg;
+    if (!ttotal) {
+      tareasStatus = "No tienes tareas programadas para hoy";
+      tareasBadge  = badge("rest", "Sin tareas");
+      tareasProg   = "";
+    } else if (!tp) {
+      tareasStatus = "¡Todas las tareas de hoy completadas! 🎉";
+      tareasBadge  = badge("done", "Al día ✓");
+      tareasProg   = prog(tdone, ttotal);
+    } else {
+      tareasStatus = "Hoy: <strong>" + tdone + "/" + ttotal + "</strong> completadas";
+      tareasBadge  = badge("pend", tp + " pendiente" + (tp > 1 ? "s" : ""));
+      tareasProg   = prog(tdone, ttotal);
+    }
+    var cTareas = card("tareas", "✅", "Tareas", tareasStatus, tareasBadge, tareasProg);
 
     var cfg   = safeParse("entreno_cfg_v1", {}), hist = safeParse("entreno_historial_v1", []), draft = safeParse("entreno_draft_v1", null);
     var week  = ejWeek(cfg), mon = mondayDate();
-    var ejToday  = hist.some(function (s) { return (s.fecha || "").slice(0, 10) === t; });
-    var ejWeekN  = hist.filter(function (s) { return new Date(s.fecha) >= mon; }).length;
+    var ejToday    = hist.some(function (s) { return (s.fecha || "").slice(0, 10) === t; });
+    var ejWeekN    = hist.filter(function (s) { return new Date(s.fecha) >= mon; }).length;
+    var ejMonthN   = hist.filter(function (s) { return (s.fecha || "").slice(0, 7) === t.slice(0, 7); }).length;
+    var ejMonthTarget = week <= 4 ? 12 : 16;
     var ejStatus, ejBadge;
-    if (draft)        { ejStatus = "Tienes una <strong>sesión en curso</strong> sin terminar"; ejBadge = badge("pend", "En curso"); }
-    else if (ejToday) { ejStatus = "Semana <strong>" + week + "/12</strong> · " + ejWeekN + " esta semana"; ejBadge = badge("done", "Entrenado hoy ✓"); }
-    else              { ejStatus = "Semana <strong>" + week + "/12</strong> · " + ejWeekN + " entrenamiento" + (ejWeekN === 1 ? "" : "s") + " esta semana"; ejBadge = badge("pend", "Sin entrenar hoy"); }
-    var cEjercicio = card("ejercicio", "🏋️", "Ejercicio", ejStatus, ejBadge, "");
+    if (draft)        { ejStatus = "Sesión en curso · mes: <strong>" + ejMonthN + "/" + ejMonthTarget + "</strong>"; ejBadge = badge("pend", "En curso"); }
+    else if (ejToday) { ejStatus = "Semana <strong>" + week + "/12</strong> · mes: " + ejMonthN + "/" + ejMonthTarget; ejBadge = badge("done", "Entrenado hoy ✓"); }
+    else              { ejStatus = "Semana <strong>" + week + "/12</strong> · mes: " + ejMonthN + "/" + ejMonthTarget; ejBadge = badge("pend", "Sin entrenar hoy"); }
+    var cEjercicio = card("ejercicio", "🏋️", "Ejercicio", ejStatus, ejBadge, prog(ejMonthN, ejMonthTarget));
 
     var mov = safeParse("movilidad-progress", {}), mreq = MOV_REQUIRED[weekdayIdx()];
     var mdone = Math.min((mov[t] || []).length, mreq);
