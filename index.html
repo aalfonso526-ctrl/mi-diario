@@ -625,7 +625,7 @@
     var todo  = safeParse("todo-app-v1", { tasks: [] }), tasks = todo.tasks || [], seen = {}, tp = 0, tdone = 0;
     tasks.forEach(function (x) {
       if (x.archived) return;
-      var hit = (x.category === "daily") || (x.due && x.due <= t);
+      var hit = (x.category === "daily") || x.due === t || !x.due;
       if (!hit || seen[x.id]) return;
       seen[x.id] = 1;
       if (x.done) tdone++; else tp++;
