@@ -249,27 +249,7 @@
     <button class="reset-btn" id="resetWeek">Reiniciar semana (nueva semana de estudio)</button>
   </div>
 
-  <div class="section">
-    <h3>🔔 Recordatorio diario</h3>
-    <label style="display:flex;align-items:center;gap:10px;font-size:.9rem;cursor:pointer;">
-      <input type="checkbox" id="remOn" style="width:18px;height:18px;accent-color:var(--accent);">
-      Avisarme si no he terminado mis bloques
-    </label>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span class="g-name">A las</span>
-      <input type="time" id="remHora" value="19:00">
-    </div>
-    <div class="anki-note" id="remNote">El aviso llega mientras la app esté abierta (también en segundo plano). Para recibirlo con la app cerrada, instálala desde el navegador y permite notificaciones.</div>
-  </div>
-
-  <div class="section">
-    <h3>💾 Datos y respaldo</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="reset-btn" id="exportIng">Exportar respaldo</button>
-      <button class="reset-btn" id="importIngBtn">Importar respaldo</button>
-    </div>
-    <input type="file" id="importIng" accept="application/json,.json" hidden>
-  </div>
+<input type="file" id="importIng" accept="application/json,.json" hidden>
   </div>
 
   <div id="view-historial" style="display:none">
@@ -646,15 +626,9 @@ document.getElementById("resetWeek").onclick = () => {
 const remOn = document.getElementById("remOn");
 const remHora = document.getElementById("remHora");
 const remBanner = document.getElementById("remBanner");
-remOn.checked = !!state.recordatorio.on;
-remHora.value = state.recordatorio.hora || "19:00";
-remOn.onchange = () => {
-  state.recordatorio.on = remOn.checked; save();
-  if (remOn.checked && "Notification" in window && Notification.permission === "default") Notification.requestPermission();
-  checkRecordatorio();
-};
-remHora.onchange = () => { state.recordatorio.hora = remHora.value; state.recordatorio.lastNotif = null; save(); };
-remBanner.onclick = () => { remBanner.style.display = "none"; window.scrollTo(0, 0); };
+if (remOn) { remOn.checked = !!state.recordatorio.on; remOn.onchange = () => { state.recordatorio.on = remOn.checked; save(); if (remOn.checked && "Notification" in window && Notification.permission === "default") Notification.requestPermission(); checkRecordatorio(); }; }
+if (remHora) { remHora.value = state.recordatorio.hora || "19:00"; remHora.onchange = () => { state.recordatorio.hora = remHora.value; state.recordatorio.lastNotif = null; save(); }; }
+if (remBanner) remBanner.onclick = () => { remBanner.style.display = "none"; window.scrollTo(0, 0); };
 
 function checkRecordatorio() {
   const hoy = hoyISO();
@@ -676,15 +650,18 @@ checkRecordatorio();
 setInterval(checkRecordatorio, 60000);
 
 // ====== EXPORTAR / IMPORTAR ======
-document.getElementById("exportIng").onclick = () => {
+const _exportIng = document.getElementById("exportIng");
+if (_exportIng) _exportIng.onclick = () => {
   const blob = new Blob([JSON.stringify({ _app: "ingles", state }, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "ingles-respaldo-" + hoyISO() + ".json";
   a.click();
 };
-document.getElementById("importIngBtn").onclick = () => document.getElementById("importIng").click();
-document.getElementById("importIng").addEventListener("change", function () {
+const _importIngBtn = document.getElementById("importIngBtn");
+if (_importIngBtn) _importIngBtn.onclick = () => document.getElementById("importIng").click();
+const _importIng = document.getElementById("importIng");
+if (_importIng) _importIng.addEventListener("change", function () {
   const file = this.files && this.files[0];
   this.value = "";
   if (!file) return;
