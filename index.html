@@ -250,6 +250,14 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ---------- Estadísticas (panel Hoy) ---------- */
+  .stats-grid { display: flex; flex-direction: column; gap: 14px; }
+  .stat-head { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .stat-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-lbl { color: var(--text-secondary); }
+  .stat-val { font-weight: 700; color: var(--accent); }
+
   /* ---------- Racha semanal (cards de Hoy) ---------- */
   .streak-row { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-top: 10px; }
   .s-col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -696,15 +704,117 @@
       idone >= 6 ? badge("done", "Completo ✓") : badge("pend", (6 - idone) + " bloque" + (6 - idone > 1 ? "s" : "")),
       prog(idone, 6), streakBar(ingDays));
 
+    /* ---------- Estadísticas ---------- */
+    var wk = getWeekStart();
+
+    /* Tareas */
+    var totalDoneTar  = tasks.filter(function (x) { return x.done; }).length;
+    var weekDoneTar   = tasks.filter(function (x) { return x.done && x.completedAt && x.completedAt.slice(0,10) >= wk; }).length;
+    var totalPendTar  = tasks.filter(function (x) { return !x.done && !x.archived; }).length;
+    var rateTar       = (totalDoneTar + totalPendTar) ? Math.round(totalDoneTar / (totalDoneTar + totalPendTar) * 100) : 0;
+
+    /* Ejercicio */
+    var ejDaysUniq = [];
+    hist.forEach(function (s) { var ds = ejLocalDate(s); if (ds && ejDaysUniq.indexOf(ds) === -1) ejDaysUniq.push(ds); });
+    ejDaysUniq.sort();
+    var weekEj = hist.filter(function (s) { return ejLocalDate(s) >= wk; }).length;
+
+    /* Inglés */
+    var ingDaysSorted = Object.keys(ing.dias || {}).filter(function (ds) { return (ing.dias[ds] || []).some(Boolean); }).sort();
+    var weekIng = ingDaysSorted.filter(function (ds) { return ds >= wk; }).length;
+
+    /* Movilidad */
+    var movDaysSorted = Object.keys(mov).filter(function (ds) { return Array.isArray(mov[ds]) && mov[ds].length > 0; }).sort();
+    var weekMov = movDaysSorted.filter(function (ds) { return ds >= wk; }).length;
+
+    /* Diario */
+    var diarData = getDiario();
+    var diarDaysSorted = Object.keys(diarData).filter(function (ds) {
+      var e = diarData[ds]; return e && (e.mood != null || (e.text && e.text.trim()));
+    }).sort();
+    var moodVals = diarDaysSorted.filter(function (ds) { return diarData[ds].mood != null; }).map(function (ds) { return diarData[ds].mood; });
+    var avgMoodStr = moodVals.length ? MOODS[Math.round(moodVals.reduce(function (a, b) { return a + b; }, 0) / moodVals.length)].emoji : "—";
+
+    var cStats =
+      '<div class="dash-h">Estadísticas</div>' +
+      '<div class="stats-grid">' +
+
+      '<div class="backup-card"><div class="stat-head">✅ Tareas</div>' +
+      statRow("Total completadas", totalDoneTar) +
+      statRow("Esta semana", weekDoneTar) +
+      statRow("Tasa de finalización", rateTar + "%") +
+      '</div>' +
+
+      '<div class="backup-card"><div class="stat-head">🏋️ Ejercicio</div>' +
+      statRow("Total entrenamientos", hist.length) +
+      statRow("Esta semana", weekEj) +
+      statRow("Mejor racha", dias(bestStreak(ejDaysUniq))) +
+      statRow("Racha actual", dias(currentStreak(ejDaysUniq))) +
+      '</div>' +
+
+      '<div class="backup-card"><div class="stat-head">🇬🇧 Inglés</div>' +
+      statRow("Días estudiados", ingDaysSorted.length) +
+      statRow("Esta semana", weekIng) +
+      statRow("Mejor racha", dias(bestStreak(ingDaysSorted))) +
+      statRow("Racha actual", dias(currentStreak(ingDaysSorted))) +
+      '</div>' +
+
+      '<div class="backup-card"><div class="stat-head">🧘 Movilidad</div>' +
+      statRow("Días con actividad", movDaysSorted.length) +
+      statRow("Esta semana", weekMov) +
+      statRow("Mejor racha", dias(bestStreak(movDaysSorted))) +
+      '</div>' +
+
+      '<div class="backup-card"><div class="stat-head">📔 Diario</div>' +
+      statRow("Días con entrada", diarDaysSorted.length) +
+      statRow("Ánimo promedio", avgMoodStr) +
+      statRow("Mejor racha", dias(bestStreak(diarDaysSorted))) +
+      statRow("Racha actual", dias(currentStreak(diarDaysSorted))) +
+      '</div>' +
+
+      '</div>';
+
     document.getElementById("dash").innerHTML =
       '<div class="dash-greet">' + saludo + "</div>" +
       '<div class="dash-date">'  + fecha   + "</div>" +
-      '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>";
+      '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>" +
+      cStats;
 
     Array.prototype.slice.call(document.querySelectorAll(".dcard[data-go]")).forEach(function (el) {
       el.addEventListener("click", function () { show(el.getAttribute("data-go")); });
     });
   }
+
+  function getWeekStart() {
+    var d = new Date();
+    d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function bestStreak(sorted) {
+    if (!sorted.length) return 0;
+    var best = 1, cur = 1;
+    for (var i = 1; i < sorted.length; i++) {
+      var diff = (new Date(sorted[i] + "T00:00:00") - new Date(sorted[i-1] + "T00:00:00")) / 86400000;
+      if (diff === 1) { cur++; if (cur > best) best = cur; } else cur = 1;
+    }
+    return best;
+  }
+  function currentStreak(sorted) {
+    if (!sorted.length) return 0;
+    var yesterday = (function () { var d = new Date(); d.setDate(d.getDate() - 1); return dateStr(d); })();
+    var last = sorted[sorted.length - 1];
+    if (last !== todayStr() && last !== yesterday) return 0;
+    var s = 1;
+    for (var i = sorted.length - 2; i >= 0; i--) {
+      if ((new Date(sorted[i+1] + "T00:00:00") - new Date(sorted[i] + "T00:00:00")) / 86400000 === 1) s++;
+      else break;
+    }
+    return s;
+  }
+  function statRow(lbl, val) {
+    return '<div class="stat-row"><span class="stat-lbl">' + lbl + '</span><span class="stat-val">' + val + '</span></div>';
+  }
+  function dias(n) { return n + " " + (n === 1 ? "día" : "días"); }
 
   var DOW_SHORT = ["D","L","M","X","J","V","S"];
   function streakBar(activeDays) {
