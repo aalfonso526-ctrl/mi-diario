@@ -297,6 +297,40 @@
   .diar-tab-bar button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .diar-pane { display: none; }
   .diar-pane.visible { display: block; }
+  /* ---------- Panel Calendario ---------- */
+  .cal-nav-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-nav-btn {
+    background: var(--soft); border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 7px 14px; font-size: 17px; cursor: pointer; color: var(--text); font-family: inherit; line-height: 1;
+  }
+  .cal-month-lbl { font-size: 15px; font-weight: 700; color: var(--text); text-transform: capitalize; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 12px; }
+  .cal-legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+  .cal-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .cal-dot.ej   { background: rgb(52,199,89); }
+  .cal-dot.mov  { background: rgb(10,132,255); }
+  .cal-dot.ing  { background: rgb(255,159,10); }
+  .cal-dot.tar  { background: rgb(142,142,147); }
+  .cal-dot.diar { background: rgb(175,82,222); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+  .cal-head { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; padding: 2px 0 4px; }
+  .cal-day { display: flex; flex-direction: column; align-items: center; padding: 4px 1px 3px; border-radius: 8px; border: 1.5px solid transparent; min-height: 42px; gap: 2px; }
+  .cal-day.has-act { cursor: pointer; }
+  .cal-day.has-act:hover { background: var(--soft); }
+  .cal-day.cal-today { border-color: var(--accent); }
+  .cal-day-num { font-size: 12px; color: var(--text); line-height: 1; }
+  .cal-day.cal-today .cal-day-num { color: var(--accent); font-weight: 700; }
+  .cal-day.cal-sel { background: var(--accent-soft); }
+  .cal-dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; min-height: 8px; }
+  .cal-day-view { margin-top: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .cal-day-view.hidden { display: none; }
+  .cal-dv-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--text); text-transform: capitalize; }
+  .cal-dv-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .cal-dv-row:last-child { border-bottom: none; }
+  .cal-dv-ico { font-size: 15px; width: 22px; flex-shrink: 0; text-align: center; }
+  .cal-dv-lbl { font-weight: 600; flex: 1; }
+  .cal-dv-val { color: var(--text-secondary); }
+  .cal-dv-val.ok { color: rgb(52,199,89); font-weight: 600; }
   /* Diario — historial */
   .mday.has-entry { cursor: pointer; }
   .mday.mday-sel { outline: 2px solid var(--text); outline-offset: -2px; }
@@ -320,6 +354,7 @@
     <button data-key="movilidad"><span class="ico">🧘</span>Movilidad</button>
     <button data-key="ingles"><span class="ico">🇬🇧</span>Inglés</button>
     <button data-key="diario"><span class="ico">📔</span>Diario</button>
+    <button data-key="calendario"><span class="ico">📅</span>Cal.</button>
     <button data-key="ajustes"><span class="ico">⚙️</span>Ajustes</button>
   </div>
 </header>
@@ -366,6 +401,32 @@
             </div>
             <div id="diar-ev-text"></div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel Calendario -->
+  <div class="panel hidden" id="panel-cal">
+    <div class="dash">
+      <div class="dash-greet">Calendario</div>
+      <div class="backup-card">
+        <div class="cal-nav-row">
+          <button class="cal-nav-btn" id="cal-prev">‹</button>
+          <div class="cal-month-lbl" id="cal-month-lbl"></div>
+          <button class="cal-nav-btn" id="cal-next">›</button>
+        </div>
+        <div class="cal-legend">
+          <div class="cal-legend-item"><span class="cal-dot ej"></span>Ejercicio</div>
+          <div class="cal-legend-item"><span class="cal-dot mov"></span>Movilidad</div>
+          <div class="cal-legend-item"><span class="cal-dot ing"></span>Inglés</div>
+          <div class="cal-legend-item"><span class="cal-dot tar"></span>Tareas</div>
+          <div class="cal-legend-item"><span class="cal-dot diar"></span>Diario</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-day-view hidden" id="cal-day-view">
+          <div class="cal-dv-title" id="cal-dv-title"></div>
+          <div id="cal-dv-body"></div>
         </div>
       </div>
     </div>
@@ -474,6 +535,7 @@
   var panelHoy     = document.getElementById("panel-hoy");
   var panelAjustes = document.getElementById("panel-ajustes");
   var panelDiario  = document.getElementById("panel-diario");
+  var panelCal     = document.getElementById("panel-cal");
   var DIARIO_KEY   = "diario-reflexion-v1";
   var loaded = {};
   var cloudReady = false;
@@ -772,6 +834,123 @@
     if (ds === todayStr()) { switchDiarTab("hoy"); return; }
     if (!cell.classList.contains("has-entry")) return;
     openDiarEntry(ds);
+  });
+
+  /* ---------- Panel Calendario ---------- */
+
+  var calNow = new Date();
+  var calYear = calNow.getFullYear(), calMonth = calNow.getMonth(), calSelDate = null;
+
+  function getCalData(year, month) {
+    var mk = year + "-" + pad(month + 1);
+    var result = {};
+    function entry(ds) {
+      if (!result[ds]) result[ds] = { ej: false, mov: 0, ing: 0, tar: 0, diar: null };
+      return result[ds];
+    }
+    var hist = safeParse("entreno_historial_v1", []);
+    hist.forEach(function (s) {
+      if (!s.fecha) return;
+      var d = new Date(s.fecha);
+      var ds = d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+      if (ds.slice(0,7) === mk) entry(ds).ej = true;
+    });
+    var mov = safeParse("movilidad-progress", {});
+    Object.keys(mov).forEach(function (ds) {
+      if (ds.slice(0,7) === mk && Array.isArray(mov[ds])) entry(ds).mov = mov[ds].length;
+    });
+    var ing = safeParse("planIngles_v1", { dias: {} });
+    Object.keys(ing.dias || {}).forEach(function (ds) {
+      if (ds.slice(0,7) === mk) {
+        var checks = ing.dias[ds] || [];
+        entry(ds).ing = checks.filter(Boolean).length;
+      }
+    });
+    var todo = safeParse("todo-app-v1", { tasks: [] });
+    (todo.tasks || []).forEach(function (tk) {
+      if (!tk.done || !tk.completedAt) return;
+      var ds = tk.completedAt.slice(0,10);
+      if (ds.slice(0,7) === mk) { entry(ds); result[ds].tar++; }
+    });
+    var diar = getDiario();
+    Object.keys(diar).forEach(function (ds) {
+      if (ds.slice(0,7) === mk) entry(ds).diar = diar[ds];
+    });
+    return result;
+  }
+
+  function renderCal() {
+    var t = todayStr();
+    var data = getCalData(calYear, calMonth);
+    var lbl = document.getElementById("cal-month-lbl");
+    if (lbl) lbl.textContent = MESES[calMonth] + " " + calYear;
+    var lead = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
+    var days = new Date(calYear, calMonth + 1, 0).getDate();
+    var DOW = ["L","M","X","J","V","S","D"];
+    var html = DOW.map(function (d) { return '<div class="cal-head">' + d + '</div>'; }).join("");
+    for (var i = 0; i < lead; i++) html += '<div class="cal-day"></div>';
+    for (var d = 1; d <= days; d++) {
+      var ds = calYear + "-" + pad(calMonth+1) + "-" + pad(d);
+      var act = data[ds];
+      var hasAct = !!(act && (act.ej || act.mov > 0 || act.ing > 0 || act.tar > 0 || act.diar));
+      var cls = "cal-day" + (ds === t ? " cal-today" : "") + (hasAct ? " has-act" : "") + (ds === calSelDate ? " cal-sel" : "");
+      var dots = "";
+      if (act) {
+        if (act.ej)      dots += '<span class="cal-dot ej"></span>';
+        if (act.mov > 0) dots += '<span class="cal-dot mov"></span>';
+        if (act.ing > 0) dots += '<span class="cal-dot ing"></span>';
+        if (act.tar > 0) dots += '<span class="cal-dot tar"></span>';
+        if (act.diar)    dots += '<span class="cal-dot diar"></span>';
+      }
+      html += '<div class="' + cls + '" data-day="' + ds + '"><span class="cal-day-num">' + d + '</span><div class="cal-dots">' + dots + '</div></div>';
+    }
+    document.getElementById("cal-grid").innerHTML = html;
+  }
+
+  function openCalDay(ds) {
+    calSelDate = ds;
+    var parts = ds.split("-");
+    var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+    var data = getCalData(parseInt(parts[0],10), parseInt(parts[1],10)-1);
+    var act = data[ds] || {};
+    document.getElementById("cal-dv-title").textContent =
+      DIAS[d.getDay()] + ", " + d.getDate() + " de " + MESES[d.getMonth()];
+    var rows = "";
+    rows += '<div class="cal-dv-row"><span class="cal-dv-ico">🏋️</span><span class="cal-dv-lbl">Ejercicio</span><span class="cal-dv-val' + (act.ej ? " ok" : "") + '">' + (act.ej ? "Entrenado ✓" : "—") + '</span></div>';
+    rows += '<div class="cal-dv-row"><span class="cal-dv-ico">🧘</span><span class="cal-dv-lbl">Movilidad</span><span class="cal-dv-val' + (act.mov > 0 ? " ok" : "") + '">' + (act.mov > 0 ? act.mov + " video" + (act.mov > 1 ? "s" : "") : "—") + '</span></div>';
+    rows += '<div class="cal-dv-row"><span class="cal-dv-ico">🇬🇧</span><span class="cal-dv-lbl">Inglés</span><span class="cal-dv-val' + (act.ing >= 6 ? " ok" : (act.ing > 0 ? "" : "")) + '">' + (act.ing > 0 ? act.ing + "/6 bloques" : "—") + '</span></div>';
+    rows += '<div class="cal-dv-row"><span class="cal-dv-ico">✅</span><span class="cal-dv-lbl">Tareas</span><span class="cal-dv-val' + (act.tar > 0 ? " ok" : "") + '">' + (act.tar > 0 ? act.tar + " completada" + (act.tar > 1 ? "s" : "") : "—") + '</span></div>';
+    var diarVal = "—";
+    if (act.diar) {
+      diarVal = act.diar.mood != null ? MOODS[act.diar.mood].emoji + " " + MOODS[act.diar.mood].label : "";
+      if (act.diar.text && act.diar.text.trim()) {
+        var snippet = act.diar.text.trim();
+        diarVal += (diarVal ? " · " : "") + snippet.slice(0, 55) + (snippet.length > 55 ? "…" : "");
+      }
+      if (!diarVal) diarVal = "Sin texto";
+    }
+    rows += '<div class="cal-dv-row"><span class="cal-dv-ico">📔</span><span class="cal-dv-lbl">Diario</span><span class="cal-dv-val' + (act.diar ? " ok" : "") + '">' + diarVal + '</span></div>';
+    document.getElementById("cal-dv-body").innerHTML = rows;
+    document.getElementById("cal-day-view").classList.remove("hidden");
+    renderCal();
+  }
+
+  document.getElementById("cal-prev").addEventListener("click", function () {
+    if (--calMonth < 0) { calMonth = 11; calYear--; }
+    calSelDate = null;
+    document.getElementById("cal-day-view").classList.add("hidden");
+    renderCal();
+  });
+  document.getElementById("cal-next").addEventListener("click", function () {
+    if (++calMonth > 11) { calMonth = 0; calYear++; }
+    calSelDate = null;
+    document.getElementById("cal-day-view").classList.add("hidden");
+    renderCal();
+  });
+  document.getElementById("cal-grid").addEventListener("click", function (e) {
+    var cell = e.target.closest(".cal-day");
+    if (!cell || !cell.dataset.day || !cell.classList.contains("has-act")) return;
+    openCalDay(cell.dataset.day);
   });
 
   /* ---------- Panel Ajustes ---------- */
@@ -1102,11 +1281,14 @@
     var isHoy     = key === "hoy";
     var isAjustes = key === "ajustes";
     var isDiario  = key === "diario";
+    var isCal     = key === "calendario";
     panelHoy.classList.toggle("hidden", !isHoy);
     panelAjustes.classList.toggle("hidden", !isAjustes);
     panelDiario.classList.toggle("hidden", !isDiario);
+    panelCal.classList.toggle("hidden", !isCal);
+    var isNative = isHoy || isAjustes || isDiario || isCal;
     frames.forEach(function (f) {
-      var active = !isHoy && !isAjustes && !isDiario && f.dataset.key === key;
+      var active = !isNative && f.dataset.key === key;
       f.classList.toggle("hidden", !active);
       if (active && !loaded[key]) {
         loaded[key] = true;
@@ -1122,6 +1304,7 @@
     if (isHoy)          { splash.classList.add("gone"); renderDash(); }
     else if (isAjustes) { splash.classList.add("gone"); updateSettingsUI(); }
     else if (isDiario)  { splash.classList.add("gone"); openDiario(); }
+    else if (isCal)     { splash.classList.add("gone"); renderCal(); }
     else if (loaded[key]) splash.classList.add("gone");
     else splash.classList.remove("gone");
     try { localStorage.setItem(STORE, key); } catch (e) {}
@@ -1145,7 +1328,7 @@
 
   var start = "hoy";
   try { var saved = localStorage.getItem(STORE); if (saved) start = saved; } catch (e) {}
-  var valid = start === "hoy" || start === "ajustes" || start === "diario" || frames.some(function (f) { return f.dataset.key === start; });
+  var valid = start === "hoy" || start === "ajustes" || start === "diario" || start === "calendario" || frames.some(function (f) { return f.dataset.key === start; });
   if (!valid) start = "hoy";
   applyTheme();
   show(start);
