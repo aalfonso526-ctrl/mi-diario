@@ -250,6 +250,15 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ---------- Racha semanal (cards de Hoy) ---------- */
+  .streak-row { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-top: 10px; }
+  .s-col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .s-lbl { font-size: 9px; font-weight: 700; color: var(--text-secondary); line-height: 1; }
+  .s-lbl.today { color: var(--accent); }
+  .s-seg { height: 5px; width: 100%; border-radius: 3px; background: var(--soft); }
+  .s-seg.on { background: var(--accent); }
+  .s-seg.today:not(.on) { outline: 1.5px solid var(--accent); outline-offset: 1px; }
+
   /* ---------- Panel Diario ---------- */
   .mood-row { display: flex; gap: 8px; margin-bottom: 16px; }
   .mood-btn {
@@ -623,8 +632,13 @@
     var fecha = DIAS[now.getDay()] + ", " + now.getDate() + " de " + MESES[now.getMonth()];
 
     var todo  = safeParse("todo-app-v1", { tasks: [] }), tasks = todo.tasks || [], seen = {}, tp = 0, tdone = 0;
+    var tareasDays = [];
     tasks.forEach(function (x) {
       if (x.archived) return;
+      if (x.done && x.completedAt) {
+        var ds = x.completedAt.slice(0, 10);
+        if (tareasDays.indexOf(ds) === -1) tareasDays.push(ds);
+      }
       var hit = !x.due || x.due === t;
       if (!hit || seen[x.id]) return;
       seen[x.id] = 1;
@@ -645,7 +659,7 @@
       tareasBadge  = badge("pend", tp + " pendiente" + (tp > 1 ? "s" : ""));
       tareasProg   = prog(tdone, ttotal);
     }
-    var cTareas = card("tareas", "✅", "Tareas", tareasStatus, tareasBadge, tareasProg);
+    var cTareas = card("tareas", "✅", "Tareas", tareasStatus, tareasBadge, tareasProg, streakBar(tareasDays));
 
     var cfg   = safeParse("entreno_cfg_v1", {}), hist = safeParse("entreno_historial_v1", []), draft = safeParse("entreno_draft_v1", null);
     var week  = ejWeek(cfg), mon = mondayDate();
@@ -654,6 +668,8 @@
       var d = new Date(s.fecha);
       return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
     }
+    var ejDays = [];
+    hist.forEach(function (s) { var ds = ejLocalDate(s); if (ds && ejDays.indexOf(ds) === -1) ejDays.push(ds); });
     var ejToday    = hist.some(function (s) { return ejLocalDate(s) === t; });
     var ejWeekN    = hist.filter(function (s) { return new Date(s.fecha) >= mon; }).length;
     var ejMonthN   = hist.filter(function (s) { return ejLocalDate(s).slice(0, 7) === t.slice(0, 7); }).length;
@@ -662,21 +678,23 @@
     if (draft)        { ejStatus = "Sesión en curso · mes: <strong>" + ejMonthN + "/" + ejMonthTarget + "</strong>"; ejBadge = badge("pend", "En curso"); }
     else if (ejToday) { ejStatus = "Semana <strong>" + week + "/12</strong> · mes: " + ejMonthN + "/" + ejMonthTarget; ejBadge = badge("done", "Entrenado hoy ✓"); }
     else              { ejStatus = "Semana <strong>" + week + "/12</strong> · mes: " + ejMonthN + "/" + ejMonthTarget; ejBadge = badge("pend", "Sin entrenar hoy"); }
-    var cEjercicio = card("ejercicio", "🏋️", "Ejercicio", ejStatus, ejBadge, prog(ejMonthN, ejMonthTarget));
+    var cEjercicio = card("ejercicio", "🏋️", "Ejercicio", ejStatus, ejBadge, prog(ejMonthN, ejMonthTarget), streakBar(ejDays));
 
     var mov = safeParse("movilidad-progress", {}), mreq = MOV_REQUIRED[weekdayIdx()];
     var mdone = Math.min((mov[t] || []).length, mreq);
+    var movDays = Object.keys(mov).filter(function (ds) { return Array.isArray(mov[ds]) && mov[ds].length > 0; });
     var cMovilidad = card("movilidad", "🧘", "Movilidad",
       "Sesión de hoy: <strong>" + mdone + "/" + mreq + "</strong> videos",
       mdone >= mreq ? badge("done", "Completo ✓") : badge("pend", (mreq - mdone) + " video" + (mreq - mdone > 1 ? "s" : "")),
-      prog(mdone, mreq));
+      prog(mdone, mreq), streakBar(movDays));
 
     var ing = safeParse("planIngles_v1", { dias: {} });
     var ichecks = (ing.dias && ing.dias[t]) || [], idone = ichecks.filter(Boolean).length;
+    var ingDays = Object.keys(ing.dias || {}).filter(function (ds) { return (ing.dias[ds] || []).some(Boolean); });
     var cIngles = card("ingles", "🇬🇧", "Inglés",
       "Bloques de hoy: <strong>" + idone + "/6</strong>",
       idone >= 6 ? badge("done", "Completo ✓") : badge("pend", (6 - idone) + " bloque" + (6 - idone > 1 ? "s" : "")),
-      prog(idone, 6));
+      prog(idone, 6), streakBar(ingDays));
 
     document.getElementById("dash").innerHTML =
       '<div class="dash-greet">' + saludo + "</div>" +
@@ -688,11 +706,29 @@
     });
   }
 
-  function card(go, ico, title, statusHtml, badgeHtml, progHtml) {
+  var DOW_SHORT = ["D","L","M","X","J","V","S"];
+  function streakBar(activeDays) {
+    var t = todayStr();
+    var html = '<div class="streak-row">';
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date();
+      d.setDate(d.getDate() - i);
+      var ds = dateStr(d);
+      var on = activeDays.indexOf(ds) !== -1;
+      var isToday = ds === t;
+      html += '<div class="s-col">' +
+        '<span class="s-lbl' + (isToday ? ' today' : '') + '">' + DOW_SHORT[d.getDay()] + '</span>' +
+        '<div class="s-seg' + (on ? ' on' : '') + (isToday ? ' today' : '') + '"></div>' +
+        '</div>';
+    }
+    return html + '</div>';
+  }
+
+  function card(go, ico, title, statusHtml, badgeHtml, progHtml, streakHtml) {
     return '<button class="dcard" data-go="' + go + '">' +
       '<div class="dcard-top"><div class="dcard-ico">' + ico + '</div><div class="dcard-title">' + title + "</div></div>" +
       '<div class="dcard-status">' + statusHtml + "</div>" +
-      progHtml + badgeHtml + "</button>";
+      progHtml + badgeHtml + (streakHtml || "") + "</button>";
   }
   function badge(cls, txt) { return '<span class="dbadge ' + cls + '">' + txt + "</span>"; }
   function prog(done, total) {
