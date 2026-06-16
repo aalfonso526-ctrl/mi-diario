@@ -327,7 +327,7 @@
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
   function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
   function weekdayIdx() { return (new Date().getDay() + 6) % 7; } // lunes = 0
-  function safeParse(key, def) { try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : def; } catch (e) { return def; } }
+  function safeParse(key, def) { try { var r = localStorage.getItem(key); if (r == null) return def; var v = JSON.parse(r); return v != null ? v : def; } catch (e) { return def; } }
 
   var DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
   var MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
