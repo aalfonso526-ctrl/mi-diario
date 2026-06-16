@@ -522,6 +522,28 @@
     background: rgba(0,0,0,0.08);
   }
 
+  .archive-link {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    padding: 10px 0 2px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .archive-link span { color: var(--accent); font-weight: 600; text-decoration: underline; }
+  .archive-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .archive-item:last-child { border-bottom: none; }
+  .archive-item-title { flex: 1; font-size: 14px; text-decoration: line-through; color: var(--text-secondary); }
+  .archive-item-date { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+  .archive-empty { font-size: 14px; color: var(--text-secondary); text-align: center; padding: 16px 0; }
+
   /* ---------- FAB ---------- */
   .fab {
     position: fixed;
@@ -869,6 +891,17 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="archiveModal">
+  <div class="modal">
+    <h3>Tareas archivadas</h3>
+    <p class="stats-note">Las tareas completadas se archivan automáticamente después de 2 días.</p>
+    <div id="archiveList"></div>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" id="archiveClose">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Sincronización en la nube (opcional): SDK de Firebase + tu configuración -->
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -880,6 +913,7 @@
   "use strict";
 
   var STORAGE_KEY = "todo-app-v1";
+  var ARCHIVE_DAYS = 2;
 
   /* ---------- Estado ---------- */
   var state = load();
@@ -955,6 +989,25 @@
     return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
   }
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
+
+  function daysDiff(dateStr) {
+    if (!dateStr) return 0;
+    var d = new Date(dateStr + "T00:00:00");
+    return Math.floor((Date.now() - d.getTime()) / 86400000);
+  }
+
+  function autoArchive() {
+    var changed = false;
+    state.tasks.forEach(function (t) {
+      if (t.done && !t.archived && t.completedAt &&
+          (!t.repeat || t.repeat === "none") &&
+          daysDiff(t.completedAt) >= ARCHIVE_DAYS) {
+        t.archived = true;
+        changed = true;
+      }
+    });
+    if (changed) save();
+  }
 
   function isoWeekKey(d) {
     var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -1096,7 +1149,7 @@
 
   function renderTasks(cat) {
     cardsEl.className = "cards";
-    var tasks = state.tasks.filter(function (t) { return t.category === cat; });
+    var tasks = state.tasks.filter(function (t) { return t.category === cat && !t.archived; });
     var pending = tasks.filter(function (t) { return !t.done; });
     var done = tasks.filter(function (t) { return t.done; });
 
@@ -1120,6 +1173,13 @@
         html += '<div class="done-divider">Completadas</div>';
         done.forEach(function (t) { html += taskCard(t); });
       }
+    }
+    var archivedCount = state.tasks.filter(function (t) { return t.category === cat && t.archived; }).length;
+    if (archivedCount) {
+      html += '<div class="archive-link" data-cat="' + cat + '">' +
+        archivedCount + ' tarea' + (archivedCount !== 1 ? 's' : '') +
+        ' archivada' + (archivedCount !== 1 ? 's' : '') +
+        ' · <span>Ver</span></div>';
     }
     cardsEl.innerHTML = html;
   }
@@ -1245,7 +1305,7 @@
     cardsEl.className = "stack";
     var today = todayStr();
 
-    var monthlyTasks = state.tasks.filter(function (t) { return t.category === "monthly"; });
+    var monthlyTasks = state.tasks.filter(function (t) { return t.category === "monthly" && !t.archived; });
     var doneCount = monthlyTasks.filter(function (t) { return t.done; }).length;
     var pill = document.getElementById("progressPill");
     if (monthlyTasks.length) {
@@ -1409,6 +1469,8 @@
   cardsEl.addEventListener("click", function (e) {
     var btn = e.target.closest("[data-action]");
     if (!btn) {
+      var archLink = e.target.closest(".archive-link");
+      if (archLink) { openArchiveModal(archLink.getAttribute("data-cat")); return; }
       /* Clic en un día del calendario: nueva tarea con esa fecha */
       var cell = e.target.closest(".cal-cell");
       if (cell) openTaskModal(null, cell.getAttribute("data-date"));
@@ -1729,7 +1791,7 @@
 
   /* ---------- Escape cierra modales ---------- */
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { closeTaskModal(); closeGoalModal(); closeStats(); remModal.classList.remove("open"); }
+    if (e.key === "Escape") { closeTaskModal(); closeGoalModal(); closeStats(); closeArchiveModal(); remModal.classList.remove("open"); }
   });
 
   /* ---------- Tema claro / oscuro / automático ---------- */
@@ -1770,6 +1832,40 @@
   document.getElementById("statsBtn").addEventListener("click", function () {
     document.getElementById("statsBody").innerHTML = buildStats();
     statsModal.classList.add("open");
+  });
+
+  /* ---------- Archivo de tareas completadas ---------- */
+  var archiveModal = document.getElementById("archiveModal");
+  function closeArchiveModal() { archiveModal.classList.remove("open"); }
+  document.getElementById("archiveClose").addEventListener("click", closeArchiveModal);
+  archiveModal.addEventListener("click", function (e) { if (e.target === archiveModal) closeArchiveModal(); });
+
+  function openArchiveModal(cat) {
+    var archived = state.tasks.filter(function (t) { return t.archived && (!cat || t.category === cat); });
+    archived.sort(function (a, b) { return (b.completedAt || "").localeCompare(a.completedAt || ""); });
+    var html = "";
+    if (!archived.length) {
+      html = '<p class="archive-empty">No hay tareas archivadas.</p>';
+    } else {
+      archived.forEach(function (t) {
+        html += '<div class="archive-item">' +
+          '<span class="archive-item-title">' + esc(t.title) + '</span>' +
+          '<span class="archive-item-date">' + (t.completedAt || "") + '</span>' +
+          '<button class="btn btn-secondary archive-restore" data-id="' + t.id + '">Restaurar</button>' +
+          '</div>';
+      });
+    }
+    document.getElementById("archiveList").innerHTML = html;
+    archiveModal.classList.add("open");
+  }
+
+  document.getElementById("archiveList").addEventListener("click", function (e) {
+    var btn = e.target.closest(".archive-restore");
+    if (!btn) return;
+    var id = btn.getAttribute("data-id");
+    var t = state.tasks.filter(function (x) { return x.id === id; })[0];
+    if (t) { t.archived = false; t.done = false; t.completedAt = null; save(); render(); }
+    openArchiveModal(null);
   });
 
   /* Racha actual: periodos consecutivos completados hasta hoy (o hasta el periodo anterior) */
@@ -2264,6 +2360,7 @@
   setInterval(checkReminders, 60000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) checkReminders(); });
 
+  autoArchive();
   render();
 })();
 </script>
