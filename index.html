@@ -249,6 +249,44 @@
     transition: all .25s ease; z-index: 200;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- Panel Diario ---------- */
+  .mood-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .mood-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 12px 4px; background: var(--soft); border: 2px solid transparent;
+    border-radius: 14px; cursor: pointer; font-size: 26px; transition: all .15s ease;
+    font-family: inherit;
+  }
+  .mood-btn span { font-size: 11px; color: var(--text-secondary); font-weight: 500; line-height: 1; }
+  .mood-btn.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .mood-btn.selected span { color: var(--accent); font-weight: 700; }
+  .diar-textarea {
+    width: 100%; background: var(--soft); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px;
+    color: var(--text); resize: vertical; min-height: 110px; line-height: 1.6;
+    display: block;
+  }
+  .diar-textarea:focus { outline: none; border-color: var(--accent); }
+  .diar-textarea::placeholder { color: var(--text-secondary); }
+  .mood-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+  }
+  .mghead {
+    text-align: center; font-size: 10px; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; padding: 2px 0 4px;
+  }
+  .mday {
+    aspect-ratio: 1; border-radius: 7px; display: flex; align-items: center;
+    justify-content: center; font-size: 11.5px; color: var(--text-secondary);
+    border: 1.5px solid transparent;
+  }
+  .mday.mday-today { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .mday.m3 { background: rgba(52,199,89,.22); color: var(--text); }
+  .mday.m2 { background: rgba(10,132,255,.16); color: var(--text); }
+  .mday.m1 { background: rgba(142,142,147,.18); color: var(--text); }
+  .mday.m0 { background: rgba(255,59,48,.18);  color: var(--text); }
+  .diar-save-hint { font-size: 12px; color: var(--text-secondary); text-align: right; margin-top: 6px; min-height: 16px; }
 </style>
 </head>
 <body>
@@ -260,6 +298,7 @@
     <button data-key="ejercicio"><span class="ico">🏋️</span>Ejercicio</button>
     <button data-key="movilidad"><span class="ico">🧘</span>Movilidad</button>
     <button data-key="ingles"><span class="ico">🇬🇧</span>Inglés</button>
+    <button data-key="diario"><span class="ico">📔</span>Diario</button>
     <button data-key="ajustes"><span class="ico">⚙️</span>Ajustes</button>
   </div>
 </header>
@@ -269,6 +308,30 @@
 
   <!-- Panel Hoy (solo tarjetas de resumen, sin respaldo ni sync) -->
   <div class="panel" id="panel-hoy"><div class="dash" id="dash"></div></div>
+
+  <!-- Panel Diario -->
+  <div class="panel hidden" id="panel-diario">
+    <div class="dash">
+      <div class="dash-greet" id="diar-fecha"></div>
+
+      <div class="dash-h">¿Cómo te fue hoy?</div>
+      <div class="backup-card">
+        <div class="mood-row" id="diar-mood-row">
+          <button class="mood-btn" data-mood="3">😄<span>Excelente</span></button>
+          <button class="mood-btn" data-mood="2">🙂<span>Bien</span></button>
+          <button class="mood-btn" data-mood="1">😐<span>Normal</span></button>
+          <button class="mood-btn" data-mood="0">😔<span>Mal</span></button>
+        </div>
+        <textarea class="diar-textarea" id="diar-text" placeholder="Escribe unas líneas sobre tu día…"></textarea>
+        <div class="diar-save-hint" id="diar-hint"></div>
+      </div>
+
+      <div class="dash-h">Este mes</div>
+      <div class="backup-card">
+        <div class="mood-grid" id="diar-grid"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- Panel Ajustes -->
   <div class="panel hidden" id="panel-ajustes">
@@ -336,6 +399,7 @@
           <label class="check-label"><input type="checkbox" value="ejercicio" checked> 🏋️ Ejercicio</label>
           <label class="check-label"><input type="checkbox" value="movilidad" checked> 🧘 Movilidad</label>
           <label class="check-label"><input type="checkbox" value="ingles"    checked> 🇬🇧 Inglés</label>
+          <label class="check-label"><input type="checkbox" value="diario"    checked> 📔 Diario</label>
         </div>
         <div class="backup-btns">
           <button class="btn-fill" id="ajExportSel">⬇ Exportar selección</button>
@@ -371,6 +435,8 @@
   var splash   = document.getElementById("splash");
   var panelHoy     = document.getElementById("panel-hoy");
   var panelAjustes = document.getElementById("panel-ajustes");
+  var panelDiario  = document.getElementById("panel-diario");
+  var DIARIO_KEY   = "diario-reflexion-v1";
   var loaded = {};
   var cloudReady = false;
 
@@ -380,7 +446,8 @@
     "entreno_cfg_v1":       "ejercicio",
     "entreno_draft_v1":     "ejercicio",
     "movilidad-progress":   "movilidad",
-    "planIngles_v1":        "ingles"
+    "planIngles_v1":        "ingles",
+    "diario-reflexion-v1":  "diario"
   };
 
   /* ---------- Tema ---------- */
@@ -408,6 +475,7 @@
     if (!e || e.key === THEME_KEY) { applyTheme(); updateThemeUI(); }
     if (e && e.key && cloudReady) window.DiarioSync.notifyLocalChange(e.key);
     if (!panelHoy.classList.contains("hidden")) renderDash();
+    if (!panelDiario.classList.contains("hidden") && e && e.key === DIARIO_KEY) openDiario();
   });
 
   function applyRemoteChanges(keys) {
@@ -531,6 +599,91 @@
     var pct = total ? Math.round(done / total * 100) : 0;
     return '<div class="dprog"><div class="' + (done >= total ? "full" : "") + '" style="width:' + pct + '%"></div></div>';
   }
+
+  /* ---------- Panel Diario ---------- */
+
+  var MOODS = [
+    { emoji: "😔", label: "Mal" },
+    { emoji: "😐", label: "Normal" },
+    { emoji: "🙂", label: "Bien" },
+    { emoji: "😄", label: "Excelente" }
+  ];
+  var diarMood = null;
+  var diarSaveTimer = null;
+
+  function getDiario() { return safeParse(DIARIO_KEY, {}); }
+
+  function saveDiarioEntry() {
+    var t = todayStr();
+    var data = getDiario();
+    var text = document.getElementById("diar-text").value;
+    if (diarMood === null && !text.trim()) {
+      delete data[t];
+    } else {
+      data[t] = { mood: diarMood, text: text };
+    }
+    localStorage.setItem(DIARIO_KEY, JSON.stringify(data));
+    var hint = document.getElementById("diar-hint");
+    if (hint) hint.textContent = "Guardado ✓";
+    renderMoodGrid();
+  }
+
+  function updateMoodUI() {
+    document.querySelectorAll(".mood-btn").forEach(function (b) {
+      b.classList.toggle("selected", parseInt(b.dataset.mood, 10) === diarMood);
+    });
+  }
+
+  function renderMoodGrid() {
+    var data = getDiario();
+    var t = todayStr();
+    var now = new Date();
+    var year = now.getFullYear(), month = now.getMonth();
+    var lead = (new Date(year, month, 1).getDay() + 6) % 7;
+    var days = new Date(year, month + 1, 0).getDate();
+    var DOW = ["L", "M", "X", "J", "V", "S", "D"];
+    var html = DOW.map(function (d) { return '<div class="mghead">' + d + '</div>'; }).join("");
+    for (var i = 0; i < lead; i++) html += '<div class="mday"></div>';
+    for (var d = 1; d <= days; d++) {
+      var ds = year + "-" + pad(month + 1) + "-" + pad(d);
+      var entry = data[ds];
+      var cls = "mday" + (ds === t ? " mday-today" : "");
+      if (entry && entry.mood != null) cls += " m" + entry.mood;
+      var emoji = (entry && entry.mood != null) ? " " + MOODS[entry.mood].emoji : "";
+      html += '<div class="' + cls + '" title="' + ds + '">' + d + emoji + '</div>';
+    }
+    document.getElementById("diar-grid").innerHTML = html;
+  }
+
+  function openDiario() {
+    var t = todayStr();
+    var now = new Date();
+    var el = document.getElementById("diar-fecha");
+    if (el) el.textContent = DIAS[now.getDay()] + ", " + now.getDate() + " de " + MESES[now.getMonth()];
+    var entry = getDiario()[t] || {};
+    diarMood = entry.mood != null ? entry.mood : null;
+    var txt = document.getElementById("diar-text");
+    if (txt) txt.value = entry.text || "";
+    var hint = document.getElementById("diar-hint");
+    if (hint) hint.textContent = entry.mood != null || entry.text ? "Guardado ✓" : "";
+    updateMoodUI();
+    renderMoodGrid();
+  }
+
+  document.getElementById("diar-mood-row").addEventListener("click", function (e) {
+    var btn = e.target.closest(".mood-btn");
+    if (!btn) return;
+    diarMood = parseInt(btn.dataset.mood, 10);
+    updateMoodUI();
+    saveDiarioEntry();
+  });
+
+  document.getElementById("diar-text").addEventListener("input", function () {
+    clearTimeout(diarSaveTimer);
+    var hint = document.getElementById("diar-hint");
+    if (hint) hint.textContent = "";
+    diarSaveTimer = setTimeout(saveDiarioEntry, 900);
+  });
 
   /* ---------- Panel Ajustes ---------- */
 
@@ -743,7 +896,8 @@
     tareas:    ["todo-app-v1"],
     ejercicio: ["entreno_historial_v1", "entreno_cfg_v1", "entreno_draft_v1"],
     movilidad: ["movilidad-progress"],
-    ingles:    ["planIngles_v1"]
+    ingles:    ["planIngles_v1"],
+    diario:    ["diario-reflexion-v1"]
   };
 
   function exportSections(sections) {
@@ -858,10 +1012,12 @@
     buttons.forEach(function (b) { b.classList.toggle("active", b.dataset.key === key); });
     var isHoy     = key === "hoy";
     var isAjustes = key === "ajustes";
+    var isDiario  = key === "diario";
     panelHoy.classList.toggle("hidden", !isHoy);
     panelAjustes.classList.toggle("hidden", !isAjustes);
+    panelDiario.classList.toggle("hidden", !isDiario);
     frames.forEach(function (f) {
-      var active = !isHoy && !isAjustes && f.dataset.key === key;
+      var active = !isHoy && !isAjustes && !isDiario && f.dataset.key === key;
       f.classList.toggle("hidden", !active);
       if (active && !loaded[key]) {
         loaded[key] = true;
@@ -874,8 +1030,9 @@
         pushTheme(f, effectiveTheme());
       }
     });
-    if (isHoy)     { splash.classList.add("gone"); renderDash(); }
+    if (isHoy)          { splash.classList.add("gone"); renderDash(); }
     else if (isAjustes) { splash.classList.add("gone"); updateSettingsUI(); }
+    else if (isDiario)  { splash.classList.add("gone"); openDiario(); }
     else if (loaded[key]) splash.classList.add("gone");
     else splash.classList.remove("gone");
     try { localStorage.setItem(STORE, key); } catch (e) {}
@@ -899,7 +1056,7 @@
 
   var start = "hoy";
   try { var saved = localStorage.getItem(STORE); if (saved) start = saved; } catch (e) {}
-  var valid = start === "hoy" || start === "ajustes" || frames.some(function (f) { return f.dataset.key === start; });
+  var valid = start === "hoy" || start === "ajustes" || start === "diario" || frames.some(function (f) { return f.dataset.key === start; });
   if (!valid) start = "hoy";
   applyTheme();
   show(start);
