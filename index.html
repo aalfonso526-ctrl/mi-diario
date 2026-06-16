@@ -250,6 +250,18 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ---------- Resumen semanal ---------- */
+  .sum-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius); padding: 16px 18px;
+    box-shadow: var(--shadow); margin-top: 18px;
+  }
+  .sum-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); margin-bottom: 8px; }
+  .sum-text { font-size: 14px; line-height: 1.65; color: var(--text); }
+  .sum-text strong { color: var(--text); }
+  .sum-motiv { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+
   /* ---------- Estadísticas (panel Hoy) ---------- */
   .stats-grid { display: flex; flex-direction: column; gap: 14px; }
   .stat-head { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
@@ -735,6 +747,57 @@
     var moodVals = diarDaysSorted.filter(function (ds) { return diarData[ds].mood != null; }).map(function (ds) { return diarData[ds].mood; });
     var avgMoodStr = moodVals.length ? MOODS[Math.round(moodVals.reduce(function (a, b) { return a + b; }, 0) / moodVals.length)].emoji : "—";
 
+    /* ---------- Resumen semanal ---------- */
+    var isMon = now.getDay() === 1;
+    var sumStart, sumEnd, sumLabel;
+    if (isMon) {
+      var d6 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+      var d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+      sumStart = dateStr(d6); sumEnd = dateStr(d0);
+      sumLabel = "Semana pasada";
+    } else {
+      sumStart = wk; sumEnd = t;
+      sumLabel = "Esta semana";
+    }
+
+    var sumTasks    = tasks.filter(function (x) { return x.done && x.completedAt && x.completedAt.slice(0,10) >= sumStart && x.completedAt.slice(0,10) <= sumEnd; }).length;
+    var sumWorkouts = ejDaysUniq.filter(function (ds) { return ds >= sumStart && ds <= sumEnd; }).length;
+    var sumIng      = ingDaysSorted.filter(function (ds) { return ds >= sumStart && ds <= sumEnd; }).length;
+    var sumMov      = movDaysSorted.filter(function (ds) { return ds >= sumStart && ds <= sumEnd; }).length;
+    var sumDiar     = diarDaysSorted.filter(function (ds) { return ds >= sumStart && ds <= sumEnd; }).length;
+    var sumMoodVals = diarDaysSorted.filter(function (ds) { return ds >= sumStart && ds <= sumEnd && diarData[ds].mood != null; }).map(function (ds) { return diarData[ds].mood; });
+    var sumAvgMood  = sumMoodVals.length ? Math.round(sumMoodVals.reduce(function (a, b) { return a + b; }, 0) / sumMoodVals.length) : null;
+
+    var sumSentences = [];
+    function n_(n, sg, pl) { return "<strong>" + n + "</strong> " + (n === 1 ? sg : pl); }
+    if (sumTasks > 0)    sumSentences.push("Completaste " + n_(sumTasks, "tarea", "tareas") + ".");
+    if (sumWorkouts > 0) sumSentences.push("Entrenaste " + n_(sumWorkouts, "día", "días") + ".");
+    if (sumIng > 0)      sumSentences.push("Estudiaste inglés " + n_(sumIng, "día", "días") + ".");
+    if (sumMov > 0)      sumSentences.push("Hiciste movilidad " + n_(sumMov, "día", "días") + ".");
+    if (sumDiar > 0)     sumSentences.push("Escribiste en tu diario " + n_(sumDiar, "día", "días") + (sumAvgMood !== null ? " (ánimo " + MOODS[sumAvgMood].emoji + ")" : "") + ".");
+
+    var sumHabits = [{n:"ejercicio", v:sumWorkouts}, {n:"inglés", v:sumIng}, {n:"movilidad", v:sumMov}, {n:"diario", v:sumDiar}];
+    sumHabits.sort(function (a, b) { return b.v - a.v; });
+    var sumBest = sumHabits[0].v > 0 ? sumHabits[0].n : null;
+    var sumTotal = sumWorkouts + sumIng + sumMov + sumDiar;
+    var sumMotiv;
+    if (!sumSentences.length) {
+      sumMotiv = isMon ? "Esta semana intenta mantener todos tus hábitos activos. 💪" : "Aún hay tiempo para tener una gran semana. ¡Empieza ahora!";
+    } else if (sumTotal >= 20) {
+      sumMotiv = "¡Semana sobresaliente! 🔥";
+    } else if (sumBest) {
+      sumMotiv = "Tu hábito más constante fue <strong>" + sumBest + "</strong>.";
+    } else {
+      sumMotiv = "Cada día cuenta. ¡Sigue adelante! 💪";
+    }
+
+    var summaryHtml =
+      '<div class="sum-card">' +
+        '<div class="sum-title">📅 ' + sumLabel + '</div>' +
+        '<div class="sum-text">' + (sumSentences.length ? sumSentences.join(" ") : "Sin actividad registrada.") + '</div>' +
+        '<div class="sum-motiv">' + sumMotiv + '</div>' +
+      '</div>';
+
     var cStats =
       '<div class="dash-h">Estadísticas</div>' +
       '<div class="stats-grid">' +
@@ -777,6 +840,7 @@
     document.getElementById("dash").innerHTML =
       '<div class="dash-greet">' + saludo + "</div>" +
       '<div class="dash-date">'  + fecha   + "</div>" +
+      summaryHtml +
       '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>" +
       cStats;
 
