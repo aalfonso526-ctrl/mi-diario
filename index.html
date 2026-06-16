@@ -881,6 +881,73 @@
         '<div class="sum-motiv">' + sumMotiv + '</div>' +
       '</div>';
 
+    /* ---------- Patrones por día de semana ---------- */
+    var patternsHtml = "";
+    var patSeen = {}, allPatDays = [];
+    [ejDaysUniq, ingDaysSorted, movDaysSorted, diarDaysSorted].forEach(function (arr) {
+      arr.forEach(function (ds) { if (!patSeen[ds]) { patSeen[ds] = 1; allPatDays.push(ds); } });
+    });
+    tasks.filter(function (x) { return x.done && x.completedAt; }).forEach(function (x) {
+      var ds = x.completedAt.slice(0, 10);
+      if (!patSeen[ds]) { patSeen[ds] = 1; allPatDays.push(ds); }
+    });
+
+    if (allPatDays.length >= 14) {
+      var dowCounts = function (days) {
+        var c = [0,0,0,0,0,0,0];
+        days.forEach(function (ds) { c[new Date(ds + "T00:00:00").getDay()]++; });
+        return c;
+      };
+      var topDow = function (counts, minOccur) {
+        var best = -1, max = minOccur - 1;
+        counts.forEach(function (v, i) { if (v > max) { max = v; best = i; } });
+        return best;
+      };
+
+      var totC   = dowCounts(allPatDays);
+      var ranked = [0,1,2,3,4,5,6].sort(function (a, b) { return totC[b] - totC[a]; });
+      var patInsights = [];
+
+      // Días más activos
+      var d1 = ranked[0], d2 = ranked[1];
+      if (totC[d1] > 0) {
+        var topStr = (totC[d2] >= totC[d1] * 0.75)
+          ? DIAS_LOS[d1] + " y " + DIAS_LOS[d2]
+          : DIAS_LOS[d1];
+        patInsights.push("Eres más activo " + topStr + ".");
+      }
+
+      // Entre semana vs fin de semana
+      var wdAvg = (totC[1]+totC[2]+totC[3]+totC[4]+totC[5]) / 5;
+      var weAvg = (totC[0]+totC[6]) / 2;
+      if (wdAvg > weAvg * 1.5)      patInsights.push("Tu actividad baja los fines de semana.");
+      else if (weAvg > wdAvg * 1.3) patInsights.push("Eres más constante los fines de semana.");
+
+      // Hábito con día más destacado
+      var secPat = [
+        { label:"ejercicio",  days: ejDaysUniq     },
+        { label:"inglés",     days: ingDaysSorted  },
+        { label:"movilidad",  days: movDaysSorted  },
+        { label:"el diario",  days: diarDaysSorted }
+      ];
+      var secMsg = null;
+      secPat.forEach(function (s) {
+        if (!secMsg && s.days.length >= 7) {
+          var best = topDow(dowCounts(s.days), 2);
+          if (best !== -1) secMsg = "Haces " + s.label + " con más frecuencia " + DIAS_LOS[best] + ".";
+        }
+      });
+      if (secMsg) patInsights.push(secMsg);
+
+      if (patInsights.length) {
+        patternsHtml =
+          '<div class="sum-card">' +
+            '<div class="sum-title">🔍 Tus patrones</div>' +
+            '<div class="sum-text">' + patInsights.join(" ") + '</div>' +
+          '</div>';
+      }
+    }
+
     var cStats =
       '<div class="dash-h">Estadísticas</div>' +
       '<div class="stats-grid">' +
@@ -953,6 +1020,7 @@
       '<div class="dash-greet">' + saludo + "</div>" +
       '<div class="dash-date">'  + fecha   + "</div>" +
       summaryHtml +
+      patternsHtml +
       overdueHtml +
       '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>" +
       cLogros +
@@ -1000,6 +1068,7 @@
   function dias(n) { return n + " " + (n === 1 ? "día" : "días"); }
 
   var DOW_SHORT = ["D","L","M","X","J","V","S"];
+  var DIAS_LOS  = ["los domingos","los lunes","los martes","los miércoles","los jueves","los viernes","los sábados"];
   function streakBar(activeDays) {
     var t = todayStr();
     var html = '<div class="streak-row">';
