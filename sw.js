@@ -2,7 +2,7 @@
    Cachea el armazón y las 4 apps para que abran sin conexión.
    Estrategia: red primero y, si falla, lo guardado en caché.
    No interfiere con el service worker propio de To-do (su ámbito es To-do/). */
-var CACHE = "diario-hub-v18";
+var CACHE = "diario-hub-v19";
 var CORE = [
   "index.html",
   "manifest.json",

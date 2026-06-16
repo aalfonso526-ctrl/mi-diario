@@ -797,14 +797,6 @@
       <textarea id="taskSubtasks" placeholder="Paso 1&#10;Paso 2&#10;Paso 3"></textarea>
     </div>
     <div class="field">
-      <label>Lista</label>
-      <div class="choice-row" id="taskCategoryRow">
-        <button class="choice selected" data-val="daily">Diaria</button>
-        <button class="choice" data-val="weekly">Semanal</button>
-        <button class="choice" data-val="monthly">Mensual</button>
-      </div>
-    </div>
-    <div class="field">
       <label>Repetición</label>
       <div class="choice-row" id="taskRepeatRow">
         <button class="choice selected" data-val="none">No se repite</button>
@@ -991,6 +983,7 @@
       if (t.done && !t.archived && t.completedAt &&
           (!t.repeat || t.repeat === "none") &&
           daysDiff(t.completedAt) >= ARCHIVE_DAYS) {
+        t.category = autoCategory(t.due);
         t.archived = true;
         changed = true;
       }
@@ -1061,6 +1054,17 @@
   var PRIO_W = { high: 0, med: 1, low: 2 };
   var catLabels = { daily: "Diaria", weekly: "Semanal", monthly: "Mensual" };
 
+  function autoCategory(due) {
+    if (!due) return "daily";
+    var t = todayStr();
+    if (due <= t) return "daily";
+    var daysUntil = -daysDiff(due);
+    return daysUntil <= 7 ? "weekly" : "monthly";
+  }
+  function taskCategory(task) {
+    return task.archived ? (task.category || autoCategory(task.due)) : autoCategory(task.due);
+  }
+
   /* Orden: pendientes primero, luego prioridad alta→baja, luego fecha límite */
   function byPriority(a, b) {
     var d = (a.done ? 1 : 0) - (b.done ? 1 : 0);
@@ -1108,7 +1112,7 @@
 
   function renderCounts() {
     ["daily", "weekly", "monthly"].forEach(function (cat) {
-      var pending = state.tasks.filter(function (t) { return t.category === cat && !t.done; }).length;
+      var pending = state.tasks.filter(function (t) { return taskCategory(t) === cat && !t.done; }).length;
       document.getElementById("count-" + cat).textContent = pending ? pending : "";
     });
     var activeGoals = state.goals.filter(function (g) { return g.progress < 100; }).length;
@@ -1117,7 +1121,7 @@
 
   function renderTasks(cat) {
     cardsEl.className = "cards";
-    var tasks = state.tasks.filter(function (t) { return t.category === cat && !t.archived; });
+    var tasks = state.tasks.filter(function (t) { return taskCategory(t) === cat && !t.archived; });
     var pending = tasks.filter(function (t) { return !t.done; });
     var done = tasks.filter(function (t) { return t.done; });
 
@@ -1142,7 +1146,7 @@
         done.forEach(function (t) { html += taskCard(t); });
       }
     }
-    var archivedCount = state.tasks.filter(function (t) { return t.category === cat && t.archived; }).length;
+    var archivedCount = state.tasks.filter(function (t) { return taskCategory(t) === cat && t.archived; }).length;
     if (archivedCount) {
       html += '<div class="archive-link" data-cat="' + cat + '">' +
         archivedCount + ' tarea' + (archivedCount !== 1 ? 's' : '') +
@@ -1156,7 +1160,7 @@
     var prio = t.priority || "med";
     var tags = "";
     if (showCat) {
-      tags += '<span class="tag cat">' + catLabels[t.category] + "</span>";
+      tags += '<span class="tag cat">' + catLabels[autoCategory(t.due)] + "</span>";
     }
     if (prio === "high") tags += '<span class="tag prio-high">⚑ Alta</span>';
     if (prio === "low") tags += '<span class="tag prio-low">Baja</span>';
@@ -1208,7 +1212,7 @@
     var monday = mondayOfWeek(new Date());
     var today = todayStr();
 
-    var weeklyTasks = state.tasks.filter(function (t) { return t.category === "weekly"; });
+    var weeklyTasks = state.tasks.filter(function (t) { return autoCategory(t.due) === "weekly"; });
     var doneCount = weeklyTasks.filter(function (t) { return t.done; }).length;
     var pill = document.getElementById("progressPill");
     if (weeklyTasks.length) {
@@ -1273,7 +1277,7 @@
     cardsEl.className = "stack";
     var today = todayStr();
 
-    var monthlyTasks = state.tasks.filter(function (t) { return t.category === "monthly" && !t.archived; });
+    var monthlyTasks = state.tasks.filter(function (t) { return autoCategory(t.due) === "monthly" && !t.archived; });
     var doneCount = monthlyTasks.filter(function (t) { return t.done; }).length;
     var pill = document.getElementById("progressPill");
     if (monthlyTasks.length) {
@@ -1545,7 +1549,6 @@
       btn.classList.add("selected");
     });
   }
-  setupChoiceRow("taskCategoryRow");
   setupChoiceRow("taskRepeatRow");
   setupChoiceRow("taskPrioRow");
 
@@ -1570,7 +1573,6 @@
     document.getElementById("taskNotes").value = task ? task.notes || "" : "";
     document.getElementById("taskSubtasks").value = task ? (task.subtasks || []).map(function (s) { return s.title; }).join("\n") : "";
     document.getElementById("taskDue").value = task ? task.due || "" : (presetDue || "");
-    setChoice("taskCategoryRow", task ? task.category : (presetDue || currentView === "goals" ? "daily" : currentView));
     setChoice("taskRepeatRow", task ? task.repeat || "none" : "none");
     setChoice("taskPrioRow", task ? task.priority || "med" : "med");
     populateGoalSelect(task ? task.goalId || "" : "");
@@ -1599,7 +1601,6 @@
     var data = {
       title: title,
       notes: document.getElementById("taskNotes").value.trim(),
-      category: getChoice("taskCategoryRow"),
       repeat: getChoice("taskRepeatRow"),
       priority: getChoice("taskPrioRow"),
       goalId: document.getElementById("taskGoal").value || null,
@@ -1627,7 +1628,7 @@
       state.tasks.push(data);
       /* Si se añadió desde el calendario, quedarse en él para verla aparecer */
       if (!fromCalendar) {
-        currentView = data.category;
+        currentView = autoCategory(data.due);
         syncSegmented();
       }
     }
@@ -1809,7 +1810,7 @@
   archiveModal.addEventListener("click", function (e) { if (e.target === archiveModal) closeArchiveModal(); });
 
   function openArchiveModal(cat) {
-    var archived = state.tasks.filter(function (t) { return t.archived && (!cat || t.category === cat); });
+    var archived = state.tasks.filter(function (t) { return t.archived && (!cat || taskCategory(t) === cat); });
     archived.sort(function (a, b) { return (b.completedAt || "").localeCompare(a.completedAt || ""); });
     var html = "";
     if (!archived.length) {
