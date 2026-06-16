@@ -287,6 +287,27 @@
   .mday.m1 { background: rgba(142,142,147,.18); color: var(--text); }
   .mday.m0 { background: rgba(255,59,48,.18);  color: var(--text); }
   .diar-save-hint { font-size: 12px; color: var(--text-secondary); text-align: right; margin-top: 6px; min-height: 16px; }
+  /* Diario — pestañas */
+  .diar-tab-bar { display: flex; gap: 6px; margin-bottom: 14px; }
+  .diar-tab-bar button {
+    flex: 1; border: 1.5px solid var(--border); background: var(--soft); color: var(--text-secondary);
+    border-radius: 10px; padding: 9px 0; cursor: pointer; font-size: 14px; font-weight: 600;
+    font-family: inherit; transition: all .15s;
+  }
+  .diar-tab-bar button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .diar-pane { display: none; }
+  .diar-pane.visible { display: block; }
+  /* Diario — historial */
+  .mday.has-entry { cursor: pointer; }
+  .mday.mday-sel { outline: 2px solid var(--text); outline-offset: -2px; }
+  .diar-month-head { text-align: center; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; text-transform: capitalize; }
+  .diar-entry-view { margin-top: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px; }
+  .diar-entry-view.hidden { display: none; }
+  .diar-ev-head { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .diar-ev-mood { font-size: 15px; font-weight: 600; }
+  .diar-ev-date { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+  .diar-ev-text { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
+  .diar-ev-empty { font-size: 13px; color: var(--text-secondary); font-style: italic; }
 </style>
 </head>
 <body>
@@ -313,22 +334,39 @@
   <div class="panel hidden" id="panel-diario">
     <div class="dash">
       <div class="dash-greet" id="diar-fecha"></div>
-
-      <div class="dash-h">¿Cómo te fue hoy?</div>
-      <div class="backup-card">
-        <div class="mood-row" id="diar-mood-row">
-          <button class="mood-btn" data-mood="3">😄<span>Excelente</span></button>
-          <button class="mood-btn" data-mood="2">🙂<span>Bien</span></button>
-          <button class="mood-btn" data-mood="1">😐<span>Normal</span></button>
-          <button class="mood-btn" data-mood="0">😔<span>Mal</span></button>
-        </div>
-        <textarea class="diar-textarea" id="diar-text" placeholder="Escribe unas líneas sobre tu día…"></textarea>
-        <div class="diar-save-hint" id="diar-hint"></div>
+      <div class="diar-tab-bar">
+        <button id="diar-tab-hoy" class="active">Hoy</button>
+        <button id="diar-tab-hist">Historial</button>
       </div>
 
-      <div class="dash-h">Este mes</div>
-      <div class="backup-card">
-        <div class="mood-grid" id="diar-grid"></div>
+      <!-- Pestaña Hoy -->
+      <div class="diar-pane visible" id="diar-pane-hoy">
+        <div class="dash-h">¿Cómo te fue hoy?</div>
+        <div class="backup-card">
+          <div class="mood-row" id="diar-mood-row">
+            <button class="mood-btn" data-mood="3">😄<span>Excelente</span></button>
+            <button class="mood-btn" data-mood="2">🙂<span>Bien</span></button>
+            <button class="mood-btn" data-mood="1">😐<span>Normal</span></button>
+            <button class="mood-btn" data-mood="0">😔<span>Mal</span></button>
+          </div>
+          <textarea class="diar-textarea" id="diar-text" placeholder="Escribe unas líneas sobre tu día…"></textarea>
+          <div class="diar-save-hint" id="diar-hint"></div>
+        </div>
+      </div>
+
+      <!-- Pestaña Historial -->
+      <div class="diar-pane" id="diar-pane-hist">
+        <div class="backup-card">
+          <div class="diar-month-head" id="diar-month-head"></div>
+          <div class="mood-grid" id="diar-grid"></div>
+          <div class="diar-entry-view hidden" id="diar-entry-view">
+            <div class="diar-ev-head">
+              <span id="diar-ev-mood"></span>
+              <span id="diar-ev-date"></span>
+            </div>
+            <div id="diar-ev-text"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -610,8 +648,41 @@
   ];
   var diarMood = null;
   var diarSaveTimer = null;
+  var diarTab = "hoy";
+  var diarSelDate = null;
 
   function getDiario() { return safeParse(DIARIO_KEY, {}); }
+
+  function switchDiarTab(tab) {
+    diarTab = tab;
+    document.getElementById("diar-pane-hoy").classList.toggle("visible", tab === "hoy");
+    document.getElementById("diar-pane-hist").classList.toggle("visible", tab === "hist");
+    document.getElementById("diar-tab-hoy").classList.toggle("active", tab === "hoy");
+    document.getElementById("diar-tab-hist").classList.toggle("active", tab === "hist");
+    if (tab === "hist") renderMoodGrid();
+  }
+
+  function openDiarEntry(ds) {
+    diarSelDate = ds;
+    var data = getDiario();
+    var entry = data[ds] || {};
+    var parts = ds.split("-");
+    var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    document.getElementById("diar-ev-date").textContent =
+      DIAS[d.getDay()] + " " + d.getDate() + " de " + MESES[d.getMonth()];
+    var moodEl = document.getElementById("diar-ev-mood");
+    moodEl.textContent = entry.mood != null ? MOODS[entry.mood].emoji + " " + MOODS[entry.mood].label : "";
+    var textEl = document.getElementById("diar-ev-text");
+    if (entry.text && entry.text.trim()) {
+      textEl.className = "diar-ev-text";
+      textEl.textContent = entry.text;
+    } else {
+      textEl.className = "diar-ev-empty";
+      textEl.textContent = "Sin texto para este día.";
+    }
+    document.getElementById("diar-entry-view").classList.remove("hidden");
+    renderMoodGrid();
+  }
 
   function saveDiarioEntry() {
     var t = todayStr();
@@ -639,6 +710,8 @@
     var t = todayStr();
     var now = new Date();
     var year = now.getFullYear(), month = now.getMonth();
+    var mh = document.getElementById("diar-month-head");
+    if (mh) mh.textContent = MESES[month] + " " + year;
     var lead = (new Date(year, month, 1).getDay() + 6) % 7;
     var days = new Date(year, month + 1, 0).getDate();
     var DOW = ["L", "M", "X", "J", "V", "S", "D"];
@@ -647,10 +720,13 @@
     for (var d = 1; d <= days; d++) {
       var ds = year + "-" + pad(month + 1) + "-" + pad(d);
       var entry = data[ds];
-      var cls = "mday" + (ds === t ? " mday-today" : "");
+      var hasEntry = !!(entry && (entry.mood != null || (entry.text && entry.text.trim())));
+      var cls = "mday" + (ds === t ? " mday-today" : "") +
+                (hasEntry ? " has-entry" : "") +
+                (ds === diarSelDate ? " mday-sel" : "");
       if (entry && entry.mood != null) cls += " m" + entry.mood;
       var emoji = (entry && entry.mood != null) ? " " + MOODS[entry.mood].emoji : "";
-      html += '<div class="' + cls + '" title="' + ds + '">' + d + emoji + '</div>';
+      html += '<div class="' + cls + '" data-day="' + ds + '">' + d + emoji + '</div>';
     }
     document.getElementById("diar-grid").innerHTML = html;
   }
@@ -667,7 +743,8 @@
     var hint = document.getElementById("diar-hint");
     if (hint) hint.textContent = entry.mood != null || entry.text ? "Guardado ✓" : "";
     updateMoodUI();
-    renderMoodGrid();
+    diarSelDate = null;
+    switchDiarTab("hoy");
   }
 
   document.getElementById("diar-mood-row").addEventListener("click", function (e) {
@@ -683,6 +760,18 @@
     var hint = document.getElementById("diar-hint");
     if (hint) hint.textContent = "";
     diarSaveTimer = setTimeout(saveDiarioEntry, 900);
+  });
+
+  document.getElementById("diar-tab-hoy").addEventListener("click", function () { switchDiarTab("hoy"); });
+  document.getElementById("diar-tab-hist").addEventListener("click", function () { switchDiarTab("hist"); });
+
+  document.getElementById("diar-grid").addEventListener("click", function (e) {
+    var cell = e.target.closest(".mday");
+    if (!cell || !cell.dataset.day) return;
+    var ds = cell.dataset.day;
+    if (ds === todayStr()) { switchDiarTab("hoy"); return; }
+    if (!cell.classList.contains("has-entry")) return;
+    openDiarEntry(ds);
   });
 
   /* ---------- Panel Ajustes ---------- */
