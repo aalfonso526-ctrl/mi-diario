@@ -481,9 +481,14 @@
 
     var cfg   = safeParse("entreno_cfg_v1", {}), hist = safeParse("entreno_historial_v1", []), draft = safeParse("entreno_draft_v1", null);
     var week  = ejWeek(cfg), mon = mondayDate();
-    var ejToday    = hist.some(function (s) { return (s.fecha || "").slice(0, 10) === t; });
+    function ejLocalDate(s) {
+      if (!s.fecha) return "";
+      var d = new Date(s.fecha);
+      return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    }
+    var ejToday    = hist.some(function (s) { return ejLocalDate(s) === t; });
     var ejWeekN    = hist.filter(function (s) { return new Date(s.fecha) >= mon; }).length;
-    var ejMonthN   = hist.filter(function (s) { return (s.fecha || "").slice(0, 7) === t.slice(0, 7); }).length;
+    var ejMonthN   = hist.filter(function (s) { return ejLocalDate(s).slice(0, 7) === t.slice(0, 7); }).length;
     var ejMonthTarget = week <= 4 ? 12 : 16;
     var ejStatus, ejBadge;
     if (draft)        { ejStatus = "Sesión en curso · mes: <strong>" + ejMonthN + "/" + ejMonthTarget + "</strong>"; ejBadge = badge("pend", "En curso"); }
