@@ -239,6 +239,57 @@
   }
   .theme-btn.active { background: var(--accent); color: #fff; }
 
+  /* ---------- Captura rápida (FAB) ---------- */
+  .fab-wrap {
+    position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); right: 20px;
+    z-index: 150; display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+  }
+  .fab-main {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent); color: #fff; border: none; font-size: 26px;
+    cursor: pointer; box-shadow: 0 4px 18px rgba(0,0,0,0.22);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .22s ease, box-shadow .15s; flex-shrink: 0;
+  }
+  .fab-main.open { transform: rotate(45deg); box-shadow: 0 6px 24px rgba(0,0,0,0.28); }
+  .fab-menu {
+    display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+    opacity: 0; pointer-events: none; transform: translateY(8px);
+    transition: opacity .18s ease, transform .18s ease;
+  }
+  .fab-menu.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  .fab-item {
+    background: var(--card); border: 1.5px solid var(--border); color: var(--text);
+    border-radius: 22px; padding: 9px 16px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit; box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+    white-space: nowrap; transition: background .12s;
+  }
+  .fab-item:hover { background: var(--soft); }
+  /* FAB bottom-sheet modal */
+  .fab-modal {
+    position: fixed; inset: 0; z-index: 180;
+    background: rgba(0,0,0,0.38); display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .fab-modal.open { opacity: 1; pointer-events: auto; }
+  .fab-sheet {
+    background: var(--card); border-radius: 20px 20px 0 0; width: 100%;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    transform: translateY(100%); transition: transform .25s ease;
+  }
+  .fab-modal.open .fab-sheet { transform: translateY(0); }
+  .fab-sheet-title { font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+  .fab-sheet-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .fab-sheet-actions button { flex: 1; }
+  .fab-inp {
+    width: 100%; background: var(--soft); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 12px 13px; font-family: inherit; font-size: 15px;
+    color: var(--text); margin-bottom: 10px; display: block;
+  }
+  .fab-inp:focus { outline: none; border-color: var(--accent); }
+  .fab-inp::placeholder { color: var(--text-secondary); }
+  .fab-inp-hint { font-size: 12px; color: var(--text-secondary); margin: -6px 0 10px; }
+
   .toast {
     position: fixed; left: 50%; bottom: 30px;
     transform: translateX(-50%) translateY(20px);
@@ -516,6 +567,28 @@
 
 <input type="file" id="importFile" accept="application/json,.json" hidden>
 <div class="toast" id="toast"></div>
+
+<!-- Captura rápida -->
+<div class="fab-wrap" id="fab-wrap">
+  <div class="fab-menu" id="fab-menu">
+    <button class="fab-item" data-qk="entreno">🏋️ Entreno</button>
+    <button class="fab-item" data-qk="nota">📝 Nota</button>
+    <button class="fab-item" data-qk="tarea">✅ Tarea</button>
+  </div>
+  <button class="fab-main" id="fab-main" aria-label="Captura rápida">＋</button>
+</div>
+
+<!-- Modal captura rápida -->
+<div class="fab-modal" id="fab-modal">
+  <div class="fab-sheet">
+    <div class="fab-sheet-title" id="fab-title"></div>
+    <div id="fab-body"></div>
+    <div class="fab-sheet-actions">
+      <button class="btn-soft" id="fab-cancel">Cancelar</button>
+      <button class="btn-fill" id="fab-save">Guardar</button>
+    </div>
+  </div>
+</div>
 
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -1332,6 +1405,117 @@
   if (!valid) start = "hoy";
   applyTheme();
   show(start);
+
+  /* ---------- Captura rápida (FAB) ---------- */
+  var fabOpen = false;
+  var fabMode = null;
+  var fabMain = document.getElementById("fab-main");
+  var fabMenu = document.getElementById("fab-menu");
+  var fabModalEl = document.getElementById("fab-modal");
+
+  function toggleFab() {
+    fabOpen = !fabOpen;
+    fabMain.classList.toggle("open", fabOpen);
+    fabMenu.classList.toggle("visible", fabOpen);
+  }
+  function closeFab() {
+    fabOpen = false;
+    fabMain.classList.remove("open");
+    fabMenu.classList.remove("visible");
+  }
+  function openQuick(mode) {
+    closeFab();
+    fabMode = mode;
+    var title = document.getElementById("fab-title");
+    var body  = document.getElementById("fab-body");
+    if (mode === "tarea") {
+      title.textContent = "✅ Nueva tarea";
+      body.innerHTML =
+        '<input class="fab-inp" id="qi-title" placeholder="¿Qué tienes que hacer?" maxlength="120">' +
+        '<label style="font-size:13px;color:var(--text-secondary);display:block;margin-bottom:4px">Fecha límite (opcional)</label>' +
+        '<input class="fab-inp" id="qi-due" type="date">';
+    } else if (mode === "nota") {
+      title.textContent = "📝 Nota rápida";
+      body.innerHTML =
+        '<textarea class="fab-inp" id="qi-text" rows="4" placeholder="Escribe lo que quieras recordar…" style="resize:none;min-height:96px"></textarea>' +
+        '<div class="fab-inp-hint">Se añadirá a la entrada de hoy en el Diario.</div>';
+    } else if (mode === "entreno") {
+      title.textContent = "🏋️ Registrar entreno";
+      body.innerHTML =
+        '<div class="fab-inp-hint" style="margin:0 0 10px">Se registrará un entreno para hoy. Puedes añadir series y ejercicios desde la sección Ejercicio.</div>' +
+        '<input class="fab-inp" id="qi-notes" placeholder="Notas del entreno (opcional)">';
+    }
+    fabModalEl.classList.add("open");
+    setTimeout(function () {
+      var first = body.querySelector("input:not([type=date]), textarea");
+      if (first) first.focus();
+    }, 260);
+  }
+  function closeQuick() {
+    fabModalEl.classList.remove("open");
+    fabMode = null;
+  }
+  function saveQuick() {
+    if (fabMode === "tarea") {
+      var titleVal = (document.getElementById("qi-title") || {}).value;
+      if (!titleVal || !titleVal.trim()) {
+        var el = document.getElementById("qi-title"); if (el) el.focus(); return;
+      }
+      var due = (document.getElementById("qi-due") || {}).value || null;
+      var todo = safeParse("todo-app-v1", { tasks: [] });
+      todo.tasks.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        title: titleVal.trim(), done: false, due: due, priority: "med",
+        repeat: "none", created: todayStr(), donePeriod: null,
+        notes: "", subtasks: [], goalId: null
+      });
+      localStorage.setItem("todo-app-v1", JSON.stringify(todo));
+      if (!panelHoy.classList.contains("hidden")) renderDash();
+      toast("Tarea añadida ✓");
+
+    } else if (fabMode === "nota") {
+      var text = ((document.getElementById("qi-text") || {}).value || "").trim();
+      if (!text) return;
+      var t = todayStr();
+      var diarData = getDiario();
+      var entry = diarData[t] || {};
+      entry.text = entry.text ? entry.text + "\n\n" + text : text;
+      diarData[t] = entry;
+      localStorage.setItem(DIARIO_KEY, JSON.stringify(diarData));
+      if (!panelDiario.classList.contains("hidden")) openDiario();
+      toast("Nota guardada en el Diario ✓");
+
+    } else if (fabMode === "entreno") {
+      var notes = ((document.getElementById("qi-notes") || {}).value || "").trim();
+      var hist = safeParse("entreno_historial_v1", []);
+      hist.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        fecha: new Date().toISOString(),
+        duracion: null, notas: notes, ejercicios: [], quick: true
+      });
+      localStorage.setItem("entreno_historial_v1", JSON.stringify(hist));
+      if (!panelHoy.classList.contains("hidden")) renderDash();
+      toast("Entreno registrado ✓");
+    }
+    closeQuick();
+  }
+
+  fabMain.addEventListener("click", toggleFab);
+  fabMenu.addEventListener("click", function (e) {
+    var btn = e.target.closest(".fab-item");
+    if (btn) openQuick(btn.dataset.qk);
+  });
+  document.getElementById("fab-cancel").addEventListener("click", closeQuick);
+  document.getElementById("fab-save").addEventListener("click", saveQuick);
+  fabModalEl.addEventListener("click", function (e) { if (e.target === fabModalEl) closeQuick(); });
+  document.addEventListener("click", function (e) {
+    if (fabOpen && !e.target.closest("#fab-wrap")) closeFab();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (fabModalEl.classList.contains("open")) closeQuick();
+    else if (fabOpen) closeFab();
+  });
 
   /* ---------- Service Worker ---------- */
   if ("serviceWorker" in navigator) {
