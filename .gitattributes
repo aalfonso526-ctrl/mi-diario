@@ -1,0 +1,3 @@
+# Normaliza todos los archivos de texto a LF en el repositorio y en la copia de trabajo.
+# Elimina los avisos "LF will be replaced by CRLF" en Windows.
+* text=auto eol=lf
