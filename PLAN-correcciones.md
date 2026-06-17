@@ -305,7 +305,7 @@ de nada eliminado. Muéstrame el diff y la lista de lo que confirmaste que estab
 muerto.
 ```
 
-### [ ] Paso 8 — Prompt 12: enablePersistence deprecado
+### [x] Paso 8 — Prompt 12: enablePersistence deprecado
 *(después del Paso 7, que borra el uso muerto en :2136)*
 
 ```

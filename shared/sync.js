@@ -141,7 +141,19 @@
 
       firebase.initializeApp(opts.config);
       state.db = firebase.firestore();
-      try { state.db.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (e) {}
+      /* Caché offline persistente con sincronización entre pestañas. API nueva
+         (Firebase 9.x+; aquí 10.14.1 compat) que reemplaza a enablePersistence
+         ({synchronizeTabs}), deprecado. settings() debe llamarse antes de usar
+         Firestore; lo hacemos justo tras crear la instancia. Si el SDK no
+         expusiera estos constructores, el catch deja la app sin caché pero
+         funcional. */
+      try {
+        state.db.settings({
+          localCache: firebase.firestore.persistentLocalCache({
+            tabManager: firebase.firestore.persistentMultipleTabManager()
+          })
+        });
+      } catch (e) {}
 
       firebase.auth().onAuthStateChanged(function (u) {
         state.user = u;
