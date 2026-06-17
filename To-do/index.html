@@ -2336,6 +2336,16 @@
     closeRemModal();
   });
 
+  /* El hub (Ajustes) puede cambiar el recordatorio mientras esta sección está
+     abierta. Releemos la copia recién escrita en localStorage para que nuestro
+     state en memoria no pise ese ajuste al siguiente saveReminders(). */
+  window.addEventListener("message", function (ev) {
+    if (ev.data && ev.data.type === "rem-refresh") {
+      reminders = loadReminders();
+      updateRemBtn();
+    }
+  });
+
   /* ---------- PWA: registrar el service worker (solo cuando se sirve por http/https) ---------- */
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
     navigator.serviceWorker.register("sw.js").catch(function () {});

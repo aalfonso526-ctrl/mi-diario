@@ -664,6 +664,16 @@ function checkRecordatorio() {
 checkRecordatorio();
 setInterval(checkRecordatorio, 60000);
 
+// El hub (Ajustes) activa/cambia el recordatorio de Inglés. Actualizamos la
+// copia en memoria para que el próximo save() (que reescribe todo state) no la
+// pise. No reescribimos localStorage: el hub ya lo hizo.
+window.addEventListener("message", (ev) => {
+  if (ev.data && ev.data.type === "ingles-rem" && ev.data.recordatorio) {
+    state.recordatorio = ev.data.recordatorio;
+    checkRecordatorio();
+  }
+});
+
 // ====== EXPORTAR / IMPORTAR ======
 const _exportIng = document.getElementById("exportIng");
 if (_exportIng) _exportIng.onclick = () => {

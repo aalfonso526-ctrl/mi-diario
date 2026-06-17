@@ -166,7 +166,7 @@ lista blanca final.
 
 ## Fase 2 — Recordatorios, ciclo de vida y limpieza de sync
 
-### [ ] Paso 4 — M2: Puerta única de recordatorios
+### [x] Paso 4 — M2: Puerta única de recordatorios
 *(fusiona los prompts 4 y 5)*
 
 ```

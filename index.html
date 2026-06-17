@@ -1418,12 +1418,45 @@
     return "Toca Activar para permitir notificaciones.";
   }
 
+  /* Manda un mensaje al iframe de una sección, solo si está cargado. */
+  function postToSection(section, msg) {
+    frames.forEach(function (f) {
+      if (f.dataset.key === section && loaded[section] && f.contentWindow) {
+        try { f.contentWindow.postMessage(msg, "*"); } catch (e) {}
+      }
+    });
+  }
+
+  /* Espeja el recordatorio de Tareas al MISMO registro de IndexedDB que lee el
+     service worker de Tareas (mis-tareas-db / kv / "reminders"), conservando
+     lastNotified. IndexedDB es por-origen, así que el hub (en /) puede escribir
+     el almacén del SW de Tareas (en /To-do/). Así el aviso se programa aunque
+     el usuario active el recordatorio en Ajustes sin abrir la sección. */
+  function mirrorTareasRemToIdb(enabled, time) {
+    try {
+      var req = indexedDB.open("mis-tareas-db", 1);
+      req.onupgradeneeded = function () { try { req.result.createObjectStore("kv"); } catch (e) {} };
+      req.onsuccess = function () {
+        try {
+          var store = req.result.transaction("kv", "readwrite").objectStore("kv");
+          var get = store.get("reminders");
+          get.onsuccess = function () {
+            var prev = get.result || {};
+            store.put({ enabled: enabled, time: time, lastNotified: prev.lastNotified || null }, "reminders");
+          };
+        } catch (e) {}
+      };
+    } catch (e) {}
+  }
+
   /* Tareas reminders: { enabled, time } en localStorage["todo-reminders"] */
   function getTareasRem() { return safeParse("todo-reminders", { enabled: false, time: "09:00" }); }
   function saveTareasRem(enabled, time) {
     var rem = getTareasRem();
     rem.enabled = enabled; rem.time = time;
     try { localStorage.setItem("todo-reminders", JSON.stringify(rem)); } catch (e) {}
+    mirrorTareasRemToIdb(enabled, time);            /* (b) el SW lo ve sin abrir Tareas */
+    postToSection("tareas", { type: "rem-refresh" }); /* (a) el iframe relee y no pisa el ajuste */
   }
 
   /* Inglés reminder: campo recordatorio dentro de planIngles_v1 */
@@ -1438,6 +1471,9 @@
     if (!ing || typeof ing !== "object" || Array.isArray(ing)) return;
     ing.recordatorio = { on: enabled, hora: hora, lastNotif: (ing.recordatorio && ing.recordatorio.lastNotif) || null };
     try { localStorage.setItem("planIngles_v1", JSON.stringify(ing)); } catch (e) {}
+    /* Evita que el save() del iframe (que reescribe todo state) pise este ajuste:
+       le pasamos el recordatorio para que sincronice su copia en memoria. */
+    postToSection("ingles", { type: "ingles-rem", recordatorio: ing.recordatorio });
   }
 
   function requestNotifPermission(cb) {
