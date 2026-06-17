@@ -1459,6 +1459,42 @@
     postToSection("tareas", { type: "rem-refresh" }); /* (a) el iframe relee y no pisa el ajuste */
   }
 
+  /* Espeja el recordatorio y el progreso del día de Inglés a IndexedDB
+     (mi-diario-db / kv), que es lo que lee el service worker del hub para avisar
+     con la app cerrada. ingles-rem conserva el lastNotif que ya hubiera (el SW
+     lo actualiza al disparar), e ingles-dias lleva el mapa de días. */
+  function mirrorInglesToIdb() {
+    try {
+      var ing = safeParse("planIngles_v1", {});
+      var rec = (ing && ing.recordatorio) || { on: false, hora: "19:00" };
+      var dias = (ing && ing.dias) || {};
+      var req = indexedDB.open("mi-diario-db", 1);
+      req.onupgradeneeded = function () { try { req.result.createObjectStore("kv"); } catch (e) {} };
+      req.onsuccess = function () {
+        try {
+          var store = req.result.transaction("kv", "readwrite").objectStore("kv");
+          store.put(dias, "ingles-dias");
+          var get = store.get("ingles-rem");
+          get.onsuccess = function () {
+            var prev = get.result || {};
+            store.put({ on: !!rec.on, hora: rec.hora || "19:00", lastNotif: prev.lastNotif || rec.lastNotif || null }, "ingles-rem");
+          };
+        } catch (e) {}
+      };
+    } catch (e) {}
+  }
+
+  /* Registra el periodicSync del aviso de Inglés (Chrome/Android con la PWA
+     instalada). Best-effort: si no está disponible, el aviso solo funciona con
+     la app abierta (el iframe ya lo cubre con su setInterval). */
+  function registerInglesPeriodicSync() {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.ready.then(function (reg) {
+      if (!("periodicSync" in reg)) return;
+      reg.periodicSync.register("ingles-reminder-check", { minInterval: 6 * 60 * 60 * 1000 }).catch(function () {});
+    }).catch(function () {});
+  }
+
   /* Inglés reminder: campo recordatorio dentro de planIngles_v1 */
   function getInglesRem() {
     var ing = safeParse("planIngles_v1", {});
@@ -1474,6 +1510,9 @@
     /* Evita que el save() del iframe (que reescribe todo state) pise este ajuste:
        le pasamos el recordatorio para que sincronice su copia en memoria. */
     postToSection("ingles", { type: "ingles-rem", recordatorio: ing.recordatorio });
+    /* Espeja a IndexedDB para el SW y arma el periodicSync si se activó. */
+    mirrorInglesToIdb();
+    if (enabled) registerInglesPeriodicSync();
   }
 
   function requestNotifPermission(cb) {
@@ -1812,6 +1851,10 @@
     });
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("sw.js").then(function (reg) { reg.update(); }).catch(function () {});
+      /* Espeja el estado de Inglés a IndexedDB para el SW y, si el recordatorio
+         ya está activo, (re)arma el periodicSync con la app cerrada. */
+      mirrorInglesToIdb();
+      if (getInglesRem().on) registerInglesPeriodicSync();
     });
   }
 })();

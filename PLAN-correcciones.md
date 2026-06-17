@@ -209,7 +209,7 @@ SW lo ve; activar y luego usar la sección → el recordatorio sigue activo.
 Muéstrame la opción elegida y el diff.
 ```
 
-### [ ] Paso 5 — Prompt 9: Recordatorio de Inglés sin service worker
+### [x] Paso 5 — Prompt 9: Recordatorio de Inglés sin service worker
 
 ```
 En este proyecto («Mi Diario», PWA), el recordatorio de Inglés casi nunca

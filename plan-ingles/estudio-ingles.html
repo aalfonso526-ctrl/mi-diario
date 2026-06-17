@@ -385,7 +385,18 @@ const LS_KEY = "planIngles_v1";
 function load() {
   try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; }
 }
-function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+// Espejo del progreso de los días a IndexedDB (mi-diario-db / kv / "ingles-dias")
+// para que el service worker del hub pueda calcular el aviso con la app cerrada.
+function mirrorDiasToIdb() {
+  try {
+    var req = indexedDB.open("mi-diario-db", 1);
+    req.onupgradeneeded = function () { try { req.result.createObjectStore("kv"); } catch (e) {} };
+    req.onsuccess = function () {
+      try { req.result.transaction("kv", "readwrite").objectStore("kv").put(state.dias || {}, "ingles-dias"); } catch (e) {}
+    };
+  } catch (e) {}
+}
+function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); mirrorDiasToIdb(); }
 let state = load();
 state.dias = state.dias || {};       // "YYYY-MM-DD" -> [bool x6]
 state.diasTs = state.diasTs || {};   // "YYYY-MM-DD" -> [ms x6]: sello por bloque
