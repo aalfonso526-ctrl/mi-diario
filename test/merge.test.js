@@ -113,6 +113,80 @@ describe("Clave desconocida", () => {
   });
 });
 
+describe("M1 — sellos por elemento y regla de empate (Tareas)", () => {
+  it("un completado offline (updatedAt mayor) gana sobre el remoto antiguo", () => {
+    const local  = { tasks: [{ id: 1, done: true,  updatedAt: 200 }], goals: [] };
+    const remote = { tasks: [{ id: 1, done: false, updatedAt: 100 }], goals: [] };
+    const r = M.mergeSection("todo-app-v1", local, remote, 200, 100);
+    expect(r.tasks[0].done).toBe(true);
+    /* El merge difiere del remoto -> handleSnapshot marcará needsPush. */
+    expect(M.canonical(r) !== M.canonical(remote)).toBe(true);
+  });
+
+  it("ante empate real de updatedAt conserva el local (pendiente de push)", () => {
+    const local  = { tasks: [{ id: 1, t: "local",  updatedAt: 50 }], goals: [] };
+    const remote = { tasks: [{ id: 1, t: "remoto", updatedAt: 50 }], goals: [] };
+    const r = M.mergeSection("todo-app-v1", local, remote, 1, 2);
+    expect(r.tasks[0].t).toBe("local");
+  });
+});
+
+/* Sellos recientes: los tombstones caducan a los 90 días, así que las pruebas
+   usan instantes próximos a ahora (NEW > OLD). */
+const NEW = Date.now() - 1000;
+const OLD = Date.now() - 60000;
+
+describe("M1 — tombstones de borrado (Tareas)", () => {
+  it("una tarea borrada en A no resucita al fusionar con B", () => {
+    const A = { tasks: [], goals: [], deleted: { 1: NEW } };
+    const B = { tasks: [{ id: 1, t: "x", updatedAt: OLD }], goals: [] };
+    const r = M.mergeSection("todo-app-v1", A, B);
+    expect(r.tasks.map((t) => t.id)).toEqual([]);
+    expect(r.deleted[1]).toBe(NEW);
+  });
+
+  it("si la tarea se editó DESPUÉS del borrado, reaparece", () => {
+    const A = { tasks: [], goals: [], deleted: { 1: OLD } };
+    const B = { tasks: [{ id: 1, t: "x", updatedAt: NEW }], goals: [] };
+    const r = M.mergeSection("todo-app-v1", A, B);
+    expect(r.tasks.map((t) => t.id)).toEqual([1]);
+  });
+});
+
+describe("M1 — borrado de sesiones (Ejercicio)", () => {
+  it("una sesión borrada en A no resucita al fusionar con B", () => {
+    const A = { list: [], deleted: { "F1": NEW } };
+    const B = [{ fecha: "F1" }, { fecha: "F2" }];
+    const r = M.mergeSection("entreno_historial_v1", A, B);
+    expect(r.list.map((s) => s.fecha)).toEqual(["F2"]);
+  });
+});
+
+describe("M1 — desmarcar se propaga entre dispositivos", () => {
+  it("Movilidad: un desmarcado reciente gana sobre la marca antigua", () => {
+    const A = { "2026-06-13": [],     __ts: { "2026-06-13|v1": NEW } };
+    const B = { "2026-06-13": ["v1"], __ts: { "2026-06-13|v1": OLD } };
+    const r = M.mergeSection("movilidad-progress", A, B);
+    expect(r["2026-06-13"] || []).toEqual([]);
+  });
+
+  it("Inglés: un desmarcado reciente gana sobre la marca antigua", () => {
+    const A = { dias: { d: [false] }, diasTs: { d: [NEW] } };
+    const B = { dias: { d: [true] },  diasTs: { d: [OLD] } };
+    const r = M.mergeSection("planIngles_v1", A, B, 2, 1);
+    expect(r.dias.d[0]).toBe(false);
+  });
+});
+
+describe("M1 — serialización canónica (anti-churn)", () => {
+  it("dos estados con distinto orden de claves son iguales canónicamente", () => {
+    const a = { b: 1, a: 2, c: { y: 1, x: 2 } };
+    const b = { c: { x: 2, y: 1 }, a: 2, b: 1 };
+    expect(M.canonical(a)).toBe(M.canonical(b));
+    /* mismo contenido reordenado -> NO se considera cambio -> no genera push */
+  });
+});
+
 describe("Helpers de fusión", () => {
   it("mergeById ignora elementos sin id", () => {
     const r = M.mergeById([{ id: 1 }, { sinId: true }], [{ id: 2 }], "id");

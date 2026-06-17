@@ -388,6 +388,15 @@ function load() {
 function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 let state = load();
 state.dias = state.dias || {};       // "YYYY-MM-DD" -> [bool x6]
+state.diasTs = state.diasTs || {};   // "YYYY-MM-DD" -> [ms x6]: sello por bloque
+
+// Sella un bloque (fecha, índice) con el instante actual. La fusión entre
+// dispositivos usa estos sellos para que un desmarcado se propague en vez de
+// "resucitar" por el OR.
+function stampDia(k, i) {
+  state.diasTs[k] = state.diasTs[k] || [0, 0, 0, 0, 0, 0];
+  state.diasTs[k][i] = Date.now();
+}
 state.semana = state.semana || {};   // weekKey -> { frases: n, ... }
 state.writing = state.writing || {}; // "YYYY-MM-DD" -> texto del writing
 state.recordatorio = state.recordatorio || { on: false, hora: "19:00" }; // aviso diario
@@ -465,6 +474,7 @@ function renderDia() {
       </div>`;
     div.querySelector("input").onchange = (e) => {
       checks[i] = e.target.checked;
+      stampDia(fechaDeDia(diaSel), i);
       save(); render();
     };
     div.querySelector(".timer-btn").onclick = () => startTimer(b.min, `${d.nombre} · Bloque ${i+1}: ${b.act}`);
@@ -617,7 +627,12 @@ document.getElementById("resetWeek").onclick = () => {
   if (confirm("¿Reiniciar los contadores de esta semana y los checks de los días? (Empezar una semana nueva)")) {
     state.semana[weekKey()] = {};
     GOALS.forEach(g => state.semana[weekKey()][g.id] = 0);
-    for (let i = 0; i < 7; i++) state.dias[fechaDeDia(i)] = [false,false,false,false,false,false];
+    for (let i = 0; i < 7; i++) {
+      const k = fechaDeDia(i);
+      state.dias[k] = [false, false, false, false, false, false];
+      // Sella el desmarcado de los 6 bloques para que el reinicio se propague.
+      for (let j = 0; j < 6; j++) stampDia(k, j);
+    }
     save(); render();
   }
 };

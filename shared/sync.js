@@ -100,13 +100,18 @@
 
       var merged = window.DiarioMerge.mergeSection(key, localVal, remoteVal, localTs, remoteTs);
       var mergedStr = JSON.stringify(merged);
+      /* Comparaciones por CONTENIDO (orden de claves canónico): así un mismo
+         estado serializado con distinto orden de claves no cuenta como cambio
+         y no genera reescrituras de ida y vuelta innecesarias (anti-churn). */
+      var canon = window.DiarioMerge.canonical;
+      var mergedCanon = canon(merged);
 
-      if (mergedStr !== localRaw) {
+      if (mergedCanon !== canon(localVal)) {
         window.DiarioStore.setRaw(key, mergedStr, Math.max(localTs, remoteTs) || Date.now());
         changedSections.push(key);
       }
       /* Si el remoto no coincide con el resultado fusionado, hay que subirlo. */
-      if (mergedStr !== (r.value == null ? null : JSON.stringify(remoteVal))) needsPush = true;
+      if (mergedCanon !== (r.value == null ? canon(null) : canon(remoteVal))) needsPush = true;
     });
     state.applying = false;
 

@@ -393,6 +393,10 @@ function toggle(dateStr, key) {
   const i = done.indexOf(key);
   if (i >= 0) done.splice(i, 1); else done.push(key);
   if (done.length) progress[dateStr] = done; else delete progress[dateStr];
+  // Sello por celda (día|vídeo) en cada marcar Y desmarcar: la fusión entre
+  // dispositivos respeta el cambio más reciente en vez de "resucitar" lo borrado.
+  progress.__ts = progress.__ts || {};
+  progress.__ts[dateStr + "|" + key] = Date.now();
   save();
   render();
 }

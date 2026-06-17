@@ -976,6 +976,17 @@
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
 
+  /* Sello por elemento: decide qué copia gana al fusionar entre dispositivos
+     (un completado offline vence a una versión remota más antigua). */
+  function touch(o) { if (o) o.updatedAt = Date.now(); return o; }
+
+  /* Tombstone de borrado: registra el id y cuándo se borró, para que el
+     elemento no "resucite" al fusionar con otro dispositivo. */
+  function markDeleted(id) {
+    state.deleted = state.deleted || {};
+    state.deleted[id] = Date.now();
+  }
+
   /* ---------- Fechas ---------- */
   function autoArchive() {
     var changed = false;
@@ -1483,34 +1494,39 @@
       /* Tarea vinculada a un objetivo: completarla suma 10%, desmarcarla lo resta */
       if (t.goalId) {
         var lg = findGoal(t.goalId);
-        if (lg) lg.progress = Math.max(0, Math.min(100, lg.progress + (t.done ? 10 : -10)));
+        if (lg) { lg.progress = Math.max(0, Math.min(100, lg.progress + (t.done ? 10 : -10))); touch(lg); }
       }
+      touch(t);
       save(); render();
     } else if (action === "sub-toggle") {
       var ts = findTask(id);
       var sid = btn.getAttribute("data-sid");
       (ts.subtasks || []).forEach(function (s) { if (s.id === sid) s.done = !s.done; });
+      touch(ts);
       save(); render();
     } else if (action === "edit") {
       openTaskModal(findTask(id));
     } else if (action === "delete") {
       if (confirm("¿Eliminar esta tarea?")) {
+        markDeleted(id);
         state.tasks = state.tasks.filter(function (t) { return t.id !== id; });
         save(); render();
       }
     } else if (action === "goal-plus" || action === "goal-minus") {
       var g = findGoal(id);
       g.progress = Math.max(0, Math.min(100, g.progress + (action === "goal-plus" ? 10 : -10)));
+      touch(g);
       save(); render();
     } else if (action === "goal-complete") {
-      findGoal(id).progress = 100;
+      touch(findGoal(id)).progress = 100;
       save(); render();
     } else if (action === "goal-edit") {
       openGoalModal(findGoal(id));
     } else if (action === "goal-delete") {
       if (confirm("¿Eliminar este objetivo?")) {
+        markDeleted(id);
         state.goals = state.goals.filter(function (g) { return g.id !== id; });
-        state.tasks.forEach(function (t) { if (t.goalId === id) t.goalId = null; });
+        state.tasks.forEach(function (t) { if (t.goalId === id) { t.goalId = null; touch(t); } });
         save(); render();
       }
     }
@@ -1620,11 +1636,13 @@
     if (editingTaskId) {
       var t = findTask(editingTaskId);
       Object.keys(data).forEach(function (k) { t[k] = data[k]; });
+      touch(t);
     } else {
       data.id = uid();
       data.done = false;
       data.donePeriod = null;
       data.created = todayStr();
+      touch(data);
       state.tasks.push(data);
       /* Si se añadió desde el calendario, quedarse en él para verla aparecer */
       if (!fromCalendar) {
@@ -1666,15 +1684,16 @@
       g.title = title;
       g.notes = document.getElementById("goalNotes").value.trim();
       g.due = document.getElementById("goalDue").value || null;
+      touch(g);
     } else {
-      state.goals.push({
+      state.goals.push(touch({
         id: uid(),
         title: title,
         notes: document.getElementById("goalNotes").value.trim(),
         due: document.getElementById("goalDue").value || null,
         progress: 0,
         created: todayStr()
-      });
+      }));
     }
     save();
     closeGoalModal();
@@ -1833,7 +1852,7 @@
     if (!btn) return;
     var id = btn.getAttribute("data-id");
     var t = state.tasks.filter(function (x) { return x.id === id; })[0];
-    if (t) { t.archived = false; t.done = false; t.completedAt = null; save(); render(); }
+    if (t) { t.archived = false; t.done = false; t.completedAt = null; touch(t); save(); render(); }
     openArchiveModal(null);
   });
 

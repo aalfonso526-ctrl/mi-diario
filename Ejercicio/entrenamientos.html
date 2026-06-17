@@ -511,11 +511,21 @@ const LS_CFG = "entreno_cfg_v1";
 function _load(key, def) {
   try { var v = JSON.parse(localStorage.getItem(key)); return v != null ? v : def; } catch(e) { return def; }
 }
-let historial = _load(LS_HIST, []);
+// El historial admite dos formas: array pelado (antiguo) y { list, deleted }
+// (nuevo, con tombstones por fecha para que una sesión borrada no resucite al
+// fusionar con otro dispositivo).
+let _hist0 = _load(LS_HIST, []);
+let historial   = Array.isArray(_hist0) ? _hist0 : (Array.isArray(_hist0.list) ? _hist0.list : []);
+let histDeleted = (_hist0 && !Array.isArray(_hist0) && _hist0.deleted) ? _hist0.deleted : {};
 let cfg       = _load(LS_CFG,  {});
 let draft     = _load(LS_DRAFT, null);
 
-function saveHist(){ localStorage.setItem(LS_HIST, JSON.stringify(historial)); }
+// Sin borrados se guarda el array pelado (compatibilidad); con borrados, el
+// objeto { list, deleted }. La fusión (shared/merge.js) entiende ambas formas.
+function saveHist(){
+  var payload = Object.keys(histDeleted).length ? { list: historial, deleted: histDeleted } : historial;
+  localStorage.setItem(LS_HIST, JSON.stringify(payload));
+}
 function saveCfg(){ localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
 function saveDraft(){ draft ? localStorage.setItem(LS_DRAFT, JSON.stringify(draft)) : localStorage.removeItem(LS_DRAFT); }
 
@@ -895,6 +905,8 @@ function toggleDet(btn){
 
 function borrarSesion(idx){
   if(!confirm("¿Borrar esta sesión del historial?")) return;
+  var s = historial[idx];
+  if (s && s.fecha) histDeleted[s.fecha] = Date.now(); // tombstone: no resucita al sincronizar
   historial.splice(idx, 1);
   saveHist();
   renderHistorial(); renderPlan();
@@ -903,6 +915,8 @@ function borrarSesion(idx){
 function borrarTodo(){
   if(!confirm("Esto borrará TODO tu historial de entrenamientos. ¿Seguro?")) return;
   if(!confirm("¿De verdad? No se puede deshacer.")) return;
+  var now = Date.now();
+  historial.forEach(function(s){ if (s && s.fecha) histDeleted[s.fecha] = now; });
   historial = []; saveHist();
   renderHistorial(); renderPlan();
 }

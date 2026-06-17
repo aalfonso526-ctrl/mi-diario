@@ -37,7 +37,7 @@ Frase que puedo pegarle a la IA para arrancar:
 
 ## Fase 1 — Integridad de datos (crítico)
 
-### [ ] Paso 1 — M1: Motor de fusión (sellos por elemento + tombstones + anti-churn)
+### [x] Paso 1 — M1: Motor de fusión (sellos por elemento + tombstones + anti-churn)
 *(fusiona los prompts 2, 3 y 22)*
 
 ```

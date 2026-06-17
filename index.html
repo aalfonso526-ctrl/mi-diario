@@ -643,6 +643,9 @@
   function safeParse(key, def) {
     try { var r = localStorage.getItem(key); if (r == null) return def; var v = JSON.parse(r); return v != null ? v : def; } catch (e) { return def; }
   }
+  /* El historial de Ejercicio admite array pelado (antiguo) o { list, deleted }
+     (nuevo, con tombstones). Devuelve siempre la lista de sesiones. */
+  function histList(v) { return Array.isArray(v) ? v : (v && Array.isArray(v.list) ? v.list : []); }
 
   var DIAS  = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
   var MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -764,7 +767,7 @@
     }
     var cTareas = card("tareas", "✅", "Tareas", tareasStatus, tareasBadge, tareasProg, streakBar(tareasDays));
 
-    var cfg   = safeParse("entreno_cfg_v1", {}), hist = safeParse("entreno_historial_v1", []), draft = safeParse("entreno_draft_v1", null);
+    var cfg   = safeParse("entreno_cfg_v1", {}), hist = histList(safeParse("entreno_historial_v1", [])), draft = safeParse("entreno_draft_v1", null);
     var week  = ejWeek(cfg), mon = mondayDate();
     function ejLocalDate(s) {
       if (!s.fecha) return "";
@@ -1246,7 +1249,7 @@
       if (!result[ds]) result[ds] = { ej: false, mov: 0, ing: 0, tar: 0, diar: null };
       return result[ds];
     }
-    var hist = safeParse("entreno_historial_v1", []);
+    var hist = histList(safeParse("entreno_historial_v1", []));
     hist.forEach(function (s) {
       if (!s.fecha) return;
       var d = new Date(s.fecha);
@@ -1613,7 +1616,7 @@
   /* ---------- Importar respaldo (desde ajustes) ---------- */
   var KNOWN_SHAPES = {
     "todo-app-v1":          function (v) { return v && Array.isArray(v.tasks) && Array.isArray(v.goals); },
-    "entreno_historial_v1": function (v) { return Array.isArray(v); },
+    "entreno_historial_v1": function (v) { return Array.isArray(v) || (v && typeof v === "object" && Array.isArray(v.list)); },
     "entreno_cfg_v1":       function (v) { return v && typeof v === "object" && !Array.isArray(v); },
     "entreno_draft_v1":     function (v) { return v === null || (typeof v === "object" && !Array.isArray(v)); },
     "movilidad-progress":   function (v) { return v && typeof v === "object" && !Array.isArray(v); },
