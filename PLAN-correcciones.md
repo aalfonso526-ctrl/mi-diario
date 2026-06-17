@@ -128,7 +128,7 @@ No cambies el formato de los datos ya guardados. Muéstrame el diff antes de
 darlo por terminado.
 ```
 
-### [ ] Paso 3 — M3: Higiene de respaldo tras el Diario
+### [x] Paso 3 — M3: Higiene de respaldo tras el Diario
 *(fusiona los prompts 13 y 20; depende del Paso 2)*
 
 ```

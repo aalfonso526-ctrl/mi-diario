@@ -1588,7 +1588,8 @@
     var meta = localStorage.getItem("__diario_meta");
     if (meta) data["__diario_meta"] = meta;
     if (!Object.keys(data).length) { toast("No hay datos para exportar"); return; }
-    var prefix = sections.length === 4 ? "" : sections.join("-") + "-";
+    /* Si se exportan TODAS las secciones, nombre corto sin prefijo. */
+    var prefix = sections.length === Object.keys(SECTION_KEYS).length ? "" : sections.join("-") + "-";
     var payload = { _app: "mi-diario-backup", _version: 1, _date: new Date().toISOString(), data: data };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
@@ -1621,26 +1622,51 @@
     updateNotifUI();
   }
 
-  /* ---------- Importar respaldo (desde ajustes) ---------- */
+  /* ---------- Importar respaldo (desde ajustes) ----------
+     Lista blanca ESTRICTA: solo se importan las claves legítimas de Mi Diario
+     y solo si su forma es válida. Cualquier otra clave se ignora (con aviso del
+     número de entradas omitidas en el diálogo de importación). */
+  function isObj(v) { return v && typeof v === "object" && !Array.isArray(v); }
+  function validDiario(v) {
+    if (!isObj(v)) return false;
+    return Object.keys(v).every(function (ds) {
+      var e = v[ds];
+      if (!isObj(e)) return false;
+      if (e.mood != null && typeof e.mood !== "number") return false;
+      if (e.text != null && (typeof e.text !== "string" || e.text.length > 100000)) return false;
+      return true;
+    });
+  }
   var KNOWN_SHAPES = {
     "todo-app-v1":          function (v) { return v && Array.isArray(v.tasks) && Array.isArray(v.goals); },
-    "entreno_historial_v1": function (v) { return Array.isArray(v) || (v && typeof v === "object" && Array.isArray(v.list)); },
-    "entreno_cfg_v1":       function (v) { return v && typeof v === "object" && !Array.isArray(v); },
-    "entreno_draft_v1":     function (v) { return v === null || (typeof v === "object" && !Array.isArray(v)); },
-    "movilidad-progress":   function (v) { return v && typeof v === "object" && !Array.isArray(v); },
-    "planIngles_v1":        function (v) { return v && typeof v === "object" && v.dias && typeof v.dias === "object"; }
+    "entreno_historial_v1": function (v) { return Array.isArray(v) || (isObj(v) && Array.isArray(v.list)); },
+    "entreno_cfg_v1":       isObj,
+    "entreno_draft_v1":     function (v) { return v === null || isObj(v); },
+    "movilidad-progress":   isObj,
+    "planIngles_v1":        function (v) { return isObj(v) && v.dias && typeof v.dias === "object"; },
+    "diario-reflexion-v1":  validDiario,
+    /* Claves auxiliares legítimas (no son "datos de sección"): logros derivados,
+       recordatorios y las marcas de tiempo de sincronización. */
+    "hub-logros-v1":        isObj,
+    "todo-reminders":       isObj,
+    "__diario_meta":        function (v) { return isObj(v) && Object.keys(v).every(function (k) { return typeof v[k] === "number"; }); }
+  };
+  /* Claves que cuentan como "datos de sección": se exige al menos una válida
+     para considerar el archivo un respaldo importable. */
+  var DATA_KEYS = {
+    "todo-app-v1": 1, "entreno_historial_v1": 1, "entreno_cfg_v1": 1, "entreno_draft_v1": 1,
+    "movilidad-progress": 1, "planIngles_v1": 1, "diario-reflexion-v1": 1
   };
   function sanitizeBackup(data) {
     var clean = {}, accepted = 0, rejected = 0, dataKeys = 0;
     Object.keys(data).forEach(function (k) {
       var raw = data[k];
       if (typeof raw !== "string" || raw.length > 5000000) { rejected++; return; }
-      if (KNOWN_SHAPES.hasOwnProperty(k)) {
-        var parsed;
-        try { parsed = JSON.parse(raw); } catch (e) { rejected++; return; }
-        if (!KNOWN_SHAPES[k](parsed)) { rejected++; return; }
-        dataKeys++;
-      }
+      if (!Object.prototype.hasOwnProperty.call(KNOWN_SHAPES, k)) { rejected++; return; } /* fuera de la lista blanca */
+      var parsed;
+      try { parsed = JSON.parse(raw); } catch (e) { rejected++; return; }
+      if (!KNOWN_SHAPES[k](parsed)) { rejected++; return; }
+      if (DATA_KEYS[k]) dataKeys++;
       clean[k] = raw; accepted++;
     });
     return { clean: clean, accepted: accepted, rejected: rejected, dataKeys: dataKeys };
