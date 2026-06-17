@@ -1,13 +1,13 @@
 /* ============================================================
    Configuración de Firebase del HUB "Mi Diario".
 
-   El hub centraliza la sincronización de las 4 secciones (ver shared/sync.js).
+   El hub centraliza la sincronización de las 5 secciones (ver shared/sync.js).
    La apiKey de Firebase es pública por diseño: la barrera real de seguridad
    son las reglas de Firestore (firestore.rules) y los dominios autorizados
    en la consola de Firebase → Authentication → Settings.
 
-   Tareas ya NO sincroniza por su cuenta (To-do/firebase-config.js = null);
-   el hub es el único escritor del documento users/{uid}.
+   Tareas ya NO carga el SDK de Firebase ni sincroniza por su cuenta; el hub es
+   el único escritor del documento users/{uid}.
    ============================================================ */
 var FIREBASE_CONFIG = {
   apiKey: "AIzaSyAR2HXEMA_XP4PuZaiZ2IWtyrF5Z4B_tbk",

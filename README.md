@@ -29,8 +29,8 @@ centralizada: un único login (Google) desde la pantalla "Hoy" respalda y combin
 no se sincronizan: se recalculan en cada dispositivo a partir de esos datos.
 
 - **Un solo escritor:** la sincronización vive en el hub (`firebase-config.js` en
-  la raíz + `shared/sync.js`). `To-do/firebase-config.js` vale `null`, así que la
-  app de Tareas abierta por separado funciona en local pero no sincroniza.
+  la raíz + `shared/sync.js`). La app de Tareas ya no carga el SDK de Firebase:
+  abierta por separado funciona en local y el hub es quien sincroniza.
 - **Fusión por elemento** (`shared/merge.js`), no "gana la última escritura del
   documento": los días de Inglés/Movilidad se combinan sin perder progreso, las
   sesiones de Ejercicio se deduplican por fecha, las tareas por `id` y las

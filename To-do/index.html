@@ -87,7 +87,6 @@
   }
   .hdr-btn:hover { background: rgba(118,118,128,0.22); }
   .hdr-btn svg { width: 16px; height: 16px; }
-  .hdr-btn.cloud-on { color: var(--green); background: var(--green-soft); }
   .search-wrap { margin-top: 10px; }
   .search-wrap input {
     width: 100%;
@@ -747,9 +746,6 @@
         <button class="hdr-btn" id="statsBtn" title="Estadísticas y rachas">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20v-7M12 20V5M19 20v-11"/></svg>
         </button>
-        <button class="hdr-btn" id="cloudBtn" title="Sincronización en la nube" style="display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .4-8.98 6 6 0 0 0-11.8 1.2A4.2 4.2 0 0 0 7 19z"/></svg>
-        </button>
         <input type="file" id="importFile" accept=".json,application/json" hidden>
       </div>
     </div>
@@ -894,11 +890,8 @@
   </div>
 </div>
 
-<!-- Sincronización en la nube (opcional): SDK de Firebase + tu configuración -->
-<script src="firebase-config.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<!-- La sincronización en la nube la gestiona el hub (raíz). La app de Tareas
+     suelta funciona en local; ya no carga el SDK de Firebase. -->
 <script src="../shared/dates.js"></script>
 
 <script>
@@ -930,10 +923,11 @@
     return { tasks: [], goals: [] };
   }
   function save() {
-    /* Marca de tiempo del último cambio: decide qué copia gana al sincronizar */
+    /* Marca de tiempo del último cambio: decide qué copia gana al sincronizar.
+       La sincronización en la nube la gestiona el HUB (lee este localStorage);
+       la app de Tareas suelta solo persiste en local + IndexedDB. */
     state.updatedAt = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    if (cloud && cloud.user) pushStateDebounced();
     mirrorStateToIdb();
   }
 
@@ -2051,133 +2045,10 @@
     if (!document.hidden) render();
   });
 
-  /* ==========================================================
-     Sincronización en la nube (Firebase) — activa solo si
-     firebase-config.js tiene tu configuración.
-     ========================================================== */
-  var cloud = { user: null, db: null };
-  var cloudUnsub = null;
-  var pushTimer = null;
-
-  function pushStateDebounced() {
-    clearTimeout(pushTimer);
-    pushTimer = setTimeout(pushState, 600);
-  }
-  function pushState() {
-    if (!cloud.user || !cloud.db) return;
-    cloud.db.collection("users").doc(cloud.user.uid).set({
-      data: JSON.stringify(state),
-      updatedAt: state.updatedAt || Date.now()
-    }).catch(function () {});
-  }
-  function adoptRemote(remoteState, rUp) {
-    state = remoteState;
-    state.updatedAt = rUp;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    render();
-  }
-  function mergeStates(local, remote) {
-    /* Unión por id: sobrevive todo lo que exista en cualquiera de los dos;
-       si un elemento está en ambos, gana la versión de la nube */
-    function mergeArr(a, b) {
-      var map = {};
-      a.forEach(function (i) { map[i.id] = i; });
-      b.forEach(function (i) { map[i.id] = i; });
-      return Object.keys(map).map(function (k) { return map[k]; });
-    }
-    return { tasks: mergeArr(local.tasks, remote.tasks), goals: mergeArr(local.goals, remote.goals) };
-  }
-
-  function startSync(u) {
-    var ref = cloud.db.collection("users").doc(u.uid);
-    var initKey = "todo-cloud-init-" + u.uid;
-    cloudUnsub = ref.onSnapshot(function (snap) {
-      if (snap.metadata.hasPendingWrites) return; /* es nuestro propio cambio */
-      var remote = snap.exists ? snap.data() : null;
-      var remoteState = null;
-      if (remote && remote.data) {
-        try { remoteState = JSON.parse(remote.data); } catch (e) {}
-        if (remoteState && (!Array.isArray(remoteState.tasks) || !Array.isArray(remoteState.goals))) remoteState = null;
-      }
-
-      /* Primera conexión de este dispositivo con esta cuenta */
-      if (!localStorage.getItem(initKey)) {
-        localStorage.setItem(initKey, "1");
-        var localEmpty = !state.tasks.length && !state.goals.length;
-        var remoteEmpty = !remoteState || (!remoteState.tasks.length && !remoteState.goals.length);
-        if (remoteEmpty) { pushState(); return; }
-        if (localEmpty) { adoptRemote(remoteState, remote.updatedAt || Date.now()); return; }
-        var same = JSON.stringify({ t: state.tasks, g: state.goals }) ===
-                   JSON.stringify({ t: remoteState.tasks, g: remoteState.goals });
-        if (same) return;
-        if (confirm("La nube ya tiene datos (" + remoteState.tasks.length + " tareas, " +
-            remoteState.goals.length + " objetivos) y este dispositivo también (" +
-            state.tasks.length + " tareas, " + state.goals.length + " objetivos).\n\n" +
-            "Aceptar = COMBINAR ambos.\nCancelar = usar solo los de la nube.")) {
-          state = mergeStates(state, remoteState);
-          save(); render();
-        } else {
-          adoptRemote(remoteState, remote.updatedAt || Date.now());
-        }
-        return;
-      }
-
-      /* Sincronización normal: gana la copia con el cambio más reciente */
-      if (!remoteState) { pushState(); return; }
-      var rUp = remote.updatedAt || 0;
-      var lUp = state.updatedAt || 0;
-      if (rUp > lUp) adoptRemote(remoteState, rUp);
-      else if (lUp > rUp) pushStateDebounced();
-    }, function () {});
-  }
-  function stopSync() {
-    if (cloudUnsub) { cloudUnsub(); cloudUnsub = null; }
-  }
-
-  function updateCloudBtn() {
-    var btn = document.getElementById("cloudBtn");
-    if (cloud.user) {
-      btn.classList.add("cloud-on");
-      btn.title = "Sincronizado como " + (cloud.user.email || "tu cuenta") + " — toca para cerrar sesión";
-    } else {
-      btn.classList.remove("cloud-on");
-      btn.title = "Activar sincronización en la nube (iniciar sesión con Google)";
-    }
-  }
-
-  function cloudInit() {
-    var btn = document.getElementById("cloudBtn");
-    if (!window.FIREBASE_CONFIG || typeof firebase === "undefined") return; /* sin configurar: botón oculto */
-    btn.style.display = "";
-    firebase.initializeApp(window.FIREBASE_CONFIG);
-    cloud.db = firebase.firestore();
-    /* Caché offline de Firestore: la app funciona sin internet y sincroniza al volver */
-    try { cloud.db.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (e) {}
-    firebase.auth().onAuthStateChanged(function (u) {
-      cloud.user = u;
-      updateCloudBtn();
-      stopSync();
-      if (u) startSync(u);
-    });
-    firebase.auth().getRedirectResult().catch(function () {});
-    btn.addEventListener("click", function () {
-      if (!cloud.user) {
-        var provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider).catch(function (e) {
-          var code = e && e.code ? e.code : "";
-          if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
-            firebase.auth().signInWithRedirect(provider);
-          } else if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
-            alert("No se pudo iniciar sesión: " + (e && e.message ? e.message : e));
-          }
-        });
-      } else if (confirm("Conectado como " + (cloud.user.email || "tu cuenta") +
-          ".\n¿Cerrar sesión? La app seguirá funcionando con los datos de este dispositivo.")) {
-        firebase.auth().signOut();
-      }
-    });
-  }
-  cloudInit();
+  /* La sincronización en la nube de Tareas la gestiona el HUB de forma
+     centralizada (shared/sync.js + shared/merge.js), que lee y fusiona este
+     localStorage. La app de Tareas suelta funciona en local; aquí ya no hay
+     bloque de sync propio ni SDK de Firebase. */
 
   /* ==========================================================
      Recordatorios (notificaciones locales)

@@ -1,7 +1,7 @@
 /* Service worker de Mis Tareas: permite instalar la app y usarla sin internet.
    Estrategia: red primero (para recibir actualizaciones), caché como respaldo offline. */
-var CACHE = "mis-tareas-v3";
-var ASSETS = ["./", "./index.html", "./manifest.json", "./firebase-config.js", "./icon-192.png", "./icon-512.png"];
+var CACHE = "mis-tareas-v4";
+var ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(

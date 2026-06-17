@@ -269,7 +269,7 @@ NO debe cerrar el modal ni borrar lo escrito, y el cambio remoto debe aplicarse
 al cerrar el modal. Muéstrame el diff.
 ```
 
-### [ ] Paso 7 — Prompt 7: Código muerto de sync en Tareas + SDK Firebase
+### [x] Paso 7 — Prompt 7: Código muerto de sync en Tareas + SDK Firebase
 
 ```
 En este proyecto («Mi Diario», PWA), la app de Tareas contiene ~280 líneas de
