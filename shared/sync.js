@@ -33,8 +33,12 @@
     "entreno_cfg_v1",
     "entreno_draft_v1",
     "movilidad-progress",
-    "planIngles_v1"
+    "planIngles_v1",
+    "diario-reflexion-v1"
   ];
+  /* "hub-logros-v1" NO se sincroniza a propósito: los logros se RECALCULAN en
+     cada dispositivo a partir de los datos ya sincronizados (tareas, ejercicio,
+     etc.) en renderDash, así que no necesita viajar por la nube. */
 
   var state = {
     db: null,

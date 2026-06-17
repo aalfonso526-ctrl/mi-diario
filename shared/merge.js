@@ -250,6 +250,26 @@
       if (Object.keys(m.diasTs).length) base.diasTs = m.diasTs;
       else delete base.diasTs;
       return base;
+    },
+    /* Diario: mapa "YYYY-MM-DD" -> { mood, text[, updatedAt] }. Unión por día
+       (nunca se pierde una entrada que solo existe en un lado). En conflicto en
+       un mismo día gana la de 'updatedAt' mayor; sin updatedAt (datos antiguos)
+       o ante empate, gana la de texto más largo y, si todo empata, la local. */
+    "diario-reflexion-v1": function (l, r) {
+      l = l && typeof l === "object" ? l : {};
+      r = r && typeof r === "object" ? r : {};
+      var out = {};
+      Object.keys(l).concat(Object.keys(r)).forEach(function (ds) {
+        if (Object.prototype.hasOwnProperty.call(out, ds)) return;
+        var a = l[ds], b = r[ds];
+        if (a == null) { out[ds] = b; return; }
+        if (b == null) { out[ds] = a; return; }
+        var ta = +a.updatedAt || 0, tb = +b.updatedAt || 0;
+        if (ta !== tb) { out[ds] = ta > tb ? a : b; return; }
+        var la = (a.text || "").length, lb = (b.text || "").length;
+        out[ds] = lb > la ? b : a; /* empate exacto -> conserva la local (a) */
+      });
+      return out;
     }
   };
 

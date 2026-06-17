@@ -94,7 +94,7 @@ Movilidad (vídeos) e Inglés (bloques por posición). Muéstrame el diseño de
 tombstone, la regla de empate y el diff antes de terminar.
 ```
 
-### [ ] Paso 2 — Prompt 1: El Diario no se sincroniza ni se fusiona
+### [x] Paso 2 — Prompt 1: El Diario no se sincroniza ni se fusiona
 *(usar después de M1; reusa su tie-break/tombstones)*
 
 ```

@@ -635,6 +635,9 @@
         try { f.contentWindow.location.reload(); } catch (e) { f.src = f.dataset.src; }
       }
     });
+    /* El Diario es un panel del hub (no un iframe): si cambió en la nube y está
+       abierto, lo re-renderizamos para reflejar la fusión. */
+    if (sections.diario && !panelDiario.classList.contains("hidden")) openDiario();
     if (!panelHoy.classList.contains("hidden")) renderDash();
   }
 
@@ -1154,9 +1157,14 @@
     if (diarMood === null && !text.trim()) {
       delete data[t];
     } else {
-      data[t] = { mood: diarMood, text: text };
+      /* updatedAt por entrada: desempata la fusión entre dispositivos. */
+      data[t] = { mood: diarMood, text: text, updatedAt: Date.now() };
     }
     localStorage.setItem(DIARIO_KEY, JSON.stringify(data));
+    /* El hub escribe su propio localStorage: el evento "storage" no se dispara
+       en este mismo documento, así que avisamos a la sync manualmente para que
+       el Diario entre en el flujo de push como el resto de secciones. */
+    if (cloudReady) window.DiarioSync.notifyLocalChange(DIARIO_KEY);
     var hint = document.getElementById("diar-hint");
     if (hint) hint.textContent = "Guardado ✓";
     renderMoodGrid();

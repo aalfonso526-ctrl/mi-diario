@@ -178,6 +178,42 @@ describe("M1 — desmarcar se propaga entre dispositivos", () => {
   });
 });
 
+describe("Diario (diario-reflexion-v1)", () => {
+  it("une entradas de días distintos sin perder ninguna", () => {
+    const r = M.mergeSection(
+      "diario-reflexion-v1",
+      { "2026-06-10": { mood: 2, text: "lunes", updatedAt: 100 } },
+      { "2026-06-11": { mood: 1, text: "martes", updatedAt: 100 } }
+    );
+    expect(Object.keys(r).sort()).toEqual(["2026-06-10", "2026-06-11"]);
+    expect(r["2026-06-10"].text).toBe("lunes");
+    expect(r["2026-06-11"].text).toBe("martes");
+  });
+
+  it("en conflicto el mismo día gana la de updatedAt mayor", () => {
+    const r = M.mergeSection(
+      "diario-reflexion-v1",
+      { "2026-06-10": { mood: 0, text: "vieja", updatedAt: 100 } },
+      { "2026-06-10": { mood: 3, text: "nueva", updatedAt: 200 } }
+    );
+    expect(r["2026-06-10"].text).toBe("nueva");
+  });
+
+  it("sin updatedAt gana el texto más largo (más conservador)", () => {
+    const r = M.mergeSection(
+      "diario-reflexion-v1",
+      { "2026-06-10": { mood: 0, text: "corto" } },
+      { "2026-06-10": { mood: 1, text: "un texto bastante más largo" } }
+    );
+    expect(r["2026-06-10"].text).toBe("un texto bastante más largo");
+  });
+
+  it("conserva la entrada que solo existe en un lado", () => {
+    const r = M.mergeSection("diario-reflexion-v1", {}, { "2026-06-10": { mood: 2, text: "" } });
+    expect(r["2026-06-10"].mood).toBe(2);
+  });
+});
+
 describe("M1 — serialización canónica (anti-churn)", () => {
   it("dos estados con distinto orden de claves son iguales canónicamente", () => {
     const a = { b: 1, a: 2, c: { y: 1, x: 2 } };

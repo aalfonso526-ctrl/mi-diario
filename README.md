@@ -1,7 +1,8 @@
 # Mi Diario
 
-PWA personal que reúne cuatro secciones en un solo lugar, dentro de un hub con
-pestañas (`index.html`) que las embebe en iframes del mismo origen:
+PWA personal que reúne cinco secciones en un solo lugar, dentro de un hub con
+pestañas (`index.html`). Las cuatro primeras se embeben en iframes del mismo
+origen; el Diario es un panel propio del hub:
 
 | Sección   | Archivo                              | Datos en localStorage           |
 |-----------|--------------------------------------|---------------------------------|
@@ -9,6 +10,7 @@ pestañas (`index.html`) que las embebe en iframes del mismo origen:
 | Ejercicio | `Ejercicio/entrenamientos.html`      | `entreno_historial_v1`, `entreno_cfg_v1`, `entreno_draft_v1` |
 | Movilidad | `Movilidad/index.html`               | `movilidad-progress`            |
 | Inglés    | `plan-ingles/estudio-ingles.html`    | `planIngles_v1`                 |
+| Diario    | `index.html` (panel del hub)         | `diario-reflexion-v1`           |
 
 - **Sin build**: HTML + CSS + JS vanilla en un único archivo por sección.
 - **Offline-first**: service worker (`sw.js`) con estrategia *red primero, caché si falla*.
@@ -19,17 +21,20 @@ pestañas (`index.html`) que las embebe en iframes del mismo origen:
 
 ## Sincronización en la nube (opcional)
 
-El **hub** sincroniza las **cuatro** secciones con Cloud Firestore de forma
+El **hub** sincroniza las **cinco** secciones con Cloud Firestore de forma
 centralizada: un único login (Google) desde la pantalla "Hoy" respalda y combina
-`todo-app-v1`, `entreno_*`, `movilidad-progress` y `planIngles_v1` en el
-documento `users/{uid}` con formato `{ _v: 2, sections: { clave: {data, updatedAt} } }`.
+`todo-app-v1`, `entreno_*`, `movilidad-progress`, `planIngles_v1` y
+`diario-reflexion-v1` en el documento `users/{uid}` con formato
+`{ _v: 2, sections: { clave: {data, updatedAt} } }`. Los logros (`hub-logros-v1`)
+no se sincronizan: se recalculan en cada dispositivo a partir de esos datos.
 
 - **Un solo escritor:** la sincronización vive en el hub (`firebase-config.js` en
   la raíz + `shared/sync.js`). `To-do/firebase-config.js` vale `null`, así que la
   app de Tareas abierta por separado funciona en local pero no sincroniza.
 - **Fusión por elemento** (`shared/merge.js`), no "gana la última escritura del
   documento": los días de Inglés/Movilidad se combinan sin perder progreso, las
-  sesiones de Ejercicio se deduplican por fecha y las tareas por `id`.
+  sesiones de Ejercicio se deduplican por fecha, las tareas por `id` y las
+  entradas del Diario se unen por día (en conflicto gana la más reciente).
 - **Migración automática:** si ya tenías el formato anterior de Tareas
   (`{data, updatedAt}` en la raíz del documento), se conserva al primer
   sincronizado sin pérdida.
