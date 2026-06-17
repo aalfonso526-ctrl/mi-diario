@@ -238,7 +238,7 @@ lógica de notificaciones: reutiliza helpers existentes. Verifica el escenario
 con la pestaña cerrada. Muéstrame la opción elegida y el diff.
 ```
 
-### [ ] Paso 6 — Prompt 10: La recarga de iframes descarta entradas en curso
+### [x] Paso 6 — Prompt 10: La recarga de iframes descarta entradas en curso
 
 ```
 En este proyecto («Mi Diario», PWA), cuando llega un cambio de la nube para una

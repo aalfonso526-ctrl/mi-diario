@@ -627,17 +627,64 @@
     if (!panelDiario.classList.contains("hidden") && e && e.key === DIARIO_KEY) openDiario();
   });
 
+  /* ¿El iframe está "ocupado" con algo que una recarga destruiría? Los iframes
+     son del mismo origen, así que el hub puede inspeccionar su DOM: un modal
+     abierto (Tareas), un temporizador en marcha (Inglés) o un campo de texto
+     enfocado con contenido sin guardar. */
+  function frameBusy(f) {
+    try {
+      var doc = f.contentWindow && f.contentWindow.document;
+      if (!doc) return false;
+      if (doc.querySelector(".modal-overlay.open, #timerBar.show")) return true;
+      var a = doc.activeElement;
+      if (a && (a.tagName === "TEXTAREA" || a.isContentEditable ||
+          (a.tagName === "INPUT" && !/^(checkbox|radio|button|submit|range|color|file)$/.test(a.type || "text")))) {
+        var val = a.value != null ? a.value : (a.textContent || "");
+        if (val.trim()) return true;
+      }
+      return false;
+    } catch (e) { return false; }
+  }
+
+  /* Recargas remotas pospuestas: { section: frame } y un vigilante que reintenta
+     cuando el iframe deja de estar ocupado, para no perder el cambio remoto. */
+  var pendingReloads = {}, reloadWatcher = null;
+  function reloadFrame(f) {
+    try { f.contentWindow.location.reload(); } catch (e) { f.src = f.dataset.src; }
+  }
+  function scheduleIdleReload(f) {
+    if (!frameBusy(f)) { reloadFrame(f); return; }
+    pendingReloads[f.dataset.key] = f;
+    toast("Cambios recibidos: se aplicarán al terminar");
+    if (!reloadWatcher) {
+      reloadWatcher = setInterval(function () {
+        Object.keys(pendingReloads).forEach(function (sec) {
+          var fr = pendingReloads[sec];
+          if (!frameBusy(fr)) { delete pendingReloads[sec]; reloadFrame(fr); }
+        });
+        if (!Object.keys(pendingReloads).length) { clearInterval(reloadWatcher); reloadWatcher = null; }
+      }, 1500);
+    }
+  }
+
   function applyRemoteChanges(keys) {
     var sections = {};
     keys.forEach(function (k) { var s = KEY_TO_SECTION[k]; if (s) sections[s] = 1; });
     frames.forEach(function (f) {
       if (sections[f.dataset.key] && loaded[f.dataset.key]) {
-        try { f.contentWindow.location.reload(); } catch (e) { f.src = f.dataset.src; }
+        /* No recargar encima de algo a medio escribir: posponer hasta que el
+           iframe quede libre (el dato remoto ya está fusionado en localStorage). */
+        scheduleIdleReload(f);
       }
     });
     /* El Diario es un panel del hub (no un iframe): si cambió en la nube y está
-       abierto, lo re-renderizamos para reflejar la fusión. */
-    if (sections.diario && !panelDiario.classList.contains("hidden")) openDiario();
+       abierto, lo re-renderizamos. Pero si el usuario está escribiendo en él,
+       solo refrescamos el calendario para no pisar el texto en curso. */
+    if (sections.diario && !panelDiario.classList.contains("hidden")) {
+      var dt = document.getElementById("diar-text");
+      if (dt && document.activeElement === dt && dt.value.trim()) renderMoodGrid();
+      else openDiario();
+    }
     if (!panelHoy.classList.contains("hidden")) renderDash();
   }
 
