@@ -786,20 +786,20 @@
   <div class="modal">
     <h3 id="taskModalTitle">Nueva tarea</h3>
     <div class="field">
-      <label>Título</label>
+      <label for="taskTitle">Título</label>
       <input type="text" id="taskTitle" placeholder="¿Qué hay que hacer?" maxlength="120">
     </div>
     <div class="field">
-      <label>Notas (opcional)</label>
+      <label for="taskNotes">Notas (opcional)</label>
       <textarea id="taskNotes" placeholder="Detalles adicionales…" maxlength="500"></textarea>
     </div>
     <div class="field">
-      <label>Subtareas (una por línea, opcional)</label>
+      <label for="taskSubtasks">Subtareas (una por línea, opcional)</label>
       <textarea id="taskSubtasks" placeholder="Paso 1&#10;Paso 2&#10;Paso 3"></textarea>
     </div>
     <div class="field">
-      <label>Repetición</label>
-      <div class="choice-row" id="taskRepeatRow">
+      <label id="taskRepeatLbl">Repetición</label>
+      <div class="choice-row" id="taskRepeatRow" role="group" aria-labelledby="taskRepeatLbl">
         <button class="choice selected" data-val="none">No se repite</button>
         <button class="choice" data-val="daily">Cada día</button>
         <button class="choice" data-val="weekly">Cada semana</button>
@@ -807,19 +807,19 @@
       </div>
     </div>
     <div class="field">
-      <label>Prioridad</label>
-      <div class="choice-row" id="taskPrioRow">
+      <label id="taskPrioLbl">Prioridad</label>
+      <div class="choice-row" id="taskPrioRow" role="group" aria-labelledby="taskPrioLbl">
         <button class="choice" data-val="low">Baja</button>
         <button class="choice selected" data-val="med">Media</button>
         <button class="choice" data-val="high">Alta</button>
       </div>
     </div>
     <div class="field" id="taskGoalField">
-      <label>Vincular a objetivo (opcional)</label>
+      <label for="taskGoal">Vincular a objetivo (opcional)</label>
       <select id="taskGoal"></select>
     </div>
     <div class="field">
-      <label>Fecha límite (opcional)</label>
+      <label for="taskDue">Fecha límite (opcional)</label>
       <input type="date" id="taskDue">
     </div>
     <div class="modal-buttons">
@@ -834,15 +834,15 @@
   <div class="modal">
     <h3 id="goalModalTitle">Nuevo objetivo</h3>
     <div class="field">
-      <label>Objetivo</label>
+      <label for="goalTitle">Objetivo</label>
       <input type="text" id="goalTitle" placeholder="¿Qué quieres lograr?" maxlength="120">
     </div>
     <div class="field">
-      <label>Descripción (opcional)</label>
+      <label for="goalNotes">Descripción (opcional)</label>
       <textarea id="goalNotes" placeholder="¿Por qué es importante? ¿Cómo lo medirás?" maxlength="500"></textarea>
     </div>
     <div class="field">
-      <label>Fecha límite (opcional)</label>
+      <label for="goalDue">Fecha límite (opcional)</label>
       <input type="date" id="goalDue">
     </div>
     <div class="modal-buttons">

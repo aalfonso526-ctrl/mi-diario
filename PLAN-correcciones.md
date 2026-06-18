@@ -406,7 +406,7 @@ inline existentes. Muéstrame el diff y la política final.
 
 ## Fase 4 — Accesibilidad
 
-### [ ] Paso 11 — Prompt 6: Accesibilidad (zoom, labels, teclado, contraste)
+### [x] Paso 11 — Prompt 6: Accesibilidad (zoom, labels, teclado, contraste)
 
 ```
 En este proyecto («Mi Diario», PWA), corrige cuatro barreras de accesibilidad
