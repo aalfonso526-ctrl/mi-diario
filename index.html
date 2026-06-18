@@ -697,6 +697,11 @@
      (nuevo, con tombstones). Devuelve siempre la lista de sesiones. */
   function histList(v) { return Array.isArray(v) ? v : (v && Array.isArray(v.list) ? v.list : []); }
 
+  /* Escapa texto de usuario antes de inyectarlo en innerHTML (mismo patrón que
+     esc() de Tareas). Evita XSS almacenado: el texto del Diario puede llegar por
+     sincronización desde otro dispositivo o al importar un respaldo. */
+  function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+
   var DIAS  = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
   var MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
   var MOV_REQUIRED = [3, 2, 3, 2, 3, 2, 1];
@@ -1381,7 +1386,7 @@
       diarVal = act.diar.mood != null ? MOODS[act.diar.mood].emoji + " " + MOODS[act.diar.mood].label : "";
       if (act.diar.text && act.diar.text.trim()) {
         var snippet = act.diar.text.trim();
-        diarVal += (diarVal ? " · " : "") + snippet.slice(0, 55) + (snippet.length > 55 ? "…" : "");
+        diarVal += (diarVal ? " · " : "") + esc(snippet.slice(0, 55)) + (snippet.length > 55 ? "…" : "");
       }
       if (!diarVal) diarVal = "Sin texto";
     }

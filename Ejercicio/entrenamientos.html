@@ -511,6 +511,10 @@ const LS_CFG = "entreno_cfg_v1";
 function _load(key, def) {
   try { var v = JSON.parse(localStorage.getItem(key)); return v != null ? v : def; } catch(e) { return def; }
 }
+// Escapa texto de usuario antes de inyectarlo en innerHTML (mismo patrón que
+// esc() de Tareas). Las notas pueden llegar por sincronización o respaldo: sin
+// escapar, un <img onerror=…> se ejecutaría en el origen de la app.
+function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
 // El historial admite dos formas: array pelado (antiguo) y { list, deleted }
 // (nuevo, con tombstones por fecha para que una sesión borrada no resucite al
 // fusionar con otro dispositivo).
@@ -779,7 +783,7 @@ function renderHistorial(){
             </div>`).join("")}
         </div>`).join("") +
         `<label class="lbl" style="display:block;margin-top:8px;">Notas</label>
-         <textarea data-notas style="margin-top:4px;">${s.notas || ""}</textarea>
+         <textarea data-notas style="margin-top:4px;">${esc(s.notas || "")}</textarea>
          <div style="display:flex;gap:8px;margin-top:10px;">
            <button class="btn ghost small" onclick="cancelarEdicion()" style="flex:1;">Cancelar</button>
            <button class="btn green small" onclick="guardarEdicion(${realIdx})" style="flex:1;">Guardar cambios</button>
@@ -788,7 +792,7 @@ function renderHistorial(){
       detalle = s.ejercicios.map(e => {
         const setsTxt = e.sets.map(x => (x.peso || "—") + "lb×" + (x.reps || "—") + (x.done ? "✓" : "")).join(" · ");
         return `<div style="margin:4px 0;"><strong>${e.nombre}:</strong> ${setsTxt}</div>`;
-      }).join("") + (s.notas ? `<div style="margin-top:6px;">📝 ${s.notas}</div>` : "");
+      }).join("") + (s.notas ? `<div style="margin-top:6px;">📝 ${esc(s.notas)}</div>` : "");
     }
     div.innerHTML = `
       <div class="hist-top">

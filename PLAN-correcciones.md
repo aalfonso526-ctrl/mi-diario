@@ -340,7 +340,7 @@ y la versión de SDK asumida.
 
 ## Fase 3 — Seguridad (inyección)
 
-### [ ] Paso 9 — Prompt 8: XSS almacenado en notas de Ejercicio y texto del Diario
+### [x] Paso 9 — Prompt 8: XSS almacenado en notas de Ejercicio y texto del Diario
 
 ```
 En este proyecto («Mi Diario», PWA), hay XSS almacenado por inyectar texto de
