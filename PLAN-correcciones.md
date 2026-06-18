@@ -373,7 +373,7 @@ Verifica con una nota de prueba que contenga <img src=x onerror=alert(1)> y
 como en el calendario del Diario. Muéstrame el diff.
 ```
 
-### [ ] Paso 10 — Prompt 17: Sin CSP ni SRI
+### [x] Paso 10 — Prompt 17: Sin CSP ni SRI
 *(refuerza el Paso 9: hacerlo después)*
 
 ```

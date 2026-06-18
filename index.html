@@ -2,6 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Content-Security-Policy: reduce la superficie de XSS. script-src/style-src
+     permiten 'unsafe-inline' (la app tiene un bloque de script y estilos inline,
+     sin handlers inline ni eval), pero default-src/connect-src/frame-src quedan
+     restringidos a 'self' + los hosts de Firebase/gstatic que la sync necesita.
+     Un script externo desconocido o un fetch a otro host quedan bloqueados. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleusercontent.com; font-src 'self'; connect-src 'self' https://*.googleapis.com wss://*.googleapis.com; frame-src 'self' https://mis-tareas-97b8d.firebaseapp.com https://accounts.google.com https://apis.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>Mi Diario</title>
 <meta name="theme-color" content="#f5f5f7">
@@ -567,9 +573,11 @@
 <div class="toast" id="toast"></div>
 
 <script src="firebase-config.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<!-- SDK de Firebase con SRI (integrity sha384) + crossorigin: fija la versión
+     exacta del CDN y bloquea su carga si el archivo fuera manipulado. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" integrity="sha384-ZaR6mWzmJtrRibZ1Vm7SoHFr8OXjyAuGAXalGDKqbxFT18oi/z+oZLIRFkpeNor1" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" integrity="sha384-I1LYojsZ5RM1cOda44Z2h42Qa6YfsQ1XkXxREnhp4ueYBR/4d1pG1K+NZM537Vsj" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" integrity="sha384-Ke0FJhH7LyRqDxZ0wt+/OXV38yfQVu7g9VPEEGjYmB4RVOY/ta04uecRhsMwT7V3" crossorigin="anonymous"></script>
 <script src="shared/dates.js"></script>
 <script src="shared/store.js"></script>
 <script src="shared/merge.js"></script>

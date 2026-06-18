@@ -2,6 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Content-Security-Policy estricta: Tareas ya no usa Firebase (la sync la hace
+     el hub), así que todo es del propio origen. script-src/style-src permiten
+     'unsafe-inline' por el bloque de script y los estilos inline; no hay handlers
+     inline ni eval ni conexiones externas. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Mis Tareas</title>
 <meta name="theme-color" id="themeColorMeta" content="#f5f5f7">
