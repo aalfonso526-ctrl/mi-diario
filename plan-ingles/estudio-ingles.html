@@ -192,7 +192,6 @@
   .hist-bar div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
   .hist-empty { text-align: center; color: var(--muted); padding: 44px 16px; font-size: .9rem; }
   .section textarea { width: 100%; min-height: 130px; background: var(--card2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 10px; font-family: inherit; font-size: .9rem; resize: vertical; }
-  #remHora { background: var(--card2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-family: inherit; font-size: .85rem; }
   #remBanner { display: none; background: var(--card2); color: var(--accent); text-align: center; padding: 10px 16px; font-size: .85rem; font-weight: 600; cursor: pointer; border-bottom: 1px solid var(--border); }
 </style>
 <script src="../shared/theme.js"></script>
@@ -248,8 +247,6 @@
     <div class="anki-note">💡 Regla de oro de Anki: nunca tarjetas de palabras sueltas, siempre frases completas. Mazos: <b>English Daily Sentences</b>, <b>My Mistakes</b>, <b>Listening Vocabulary</b>, <b>Useful Questions</b>.</div>
     <button class="reset-btn" id="resetWeek">Reiniciar semana (nueva semana de estudio)</button>
   </div>
-
-<input type="file" id="importIng" accept="application/json,.json" hidden>
   </div>
 
   <div id="view-historial" style="display:none">
@@ -649,11 +646,10 @@ document.getElementById("resetWeek").onclick = () => {
 };
 
 // ====== RECORDATORIO ======
-const remOn = document.getElementById("remOn");
-const remHora = document.getElementById("remHora");
+// El on/hora del recordatorio viven en Ajustes del hub (no hay controles en este
+// iframe); aquí solo el banner y el chequeo. El hub avisa de los cambios vía
+// postMessage "ingles-rem".
 const remBanner = document.getElementById("remBanner");
-if (remOn) { remOn.checked = !!state.recordatorio.on; remOn.onchange = () => { state.recordatorio.on = remOn.checked; save(); if (remOn.checked && "Notification" in window && Notification.permission === "default") Notification.requestPermission(); checkRecordatorio(); }; }
-if (remHora) { remHora.value = state.recordatorio.hora || "19:00"; remHora.onchange = () => { state.recordatorio.hora = remHora.value; state.recordatorio.lastNotif = null; save(); }; }
 if (remBanner) remBanner.onclick = () => { remBanner.style.display = "none"; window.scrollTo(0, 0); };
 
 function checkRecordatorio() {
@@ -685,40 +681,6 @@ window.addEventListener("message", (ev) => {
   }
 });
 
-// ====== EXPORTAR / IMPORTAR ======
-const _exportIng = document.getElementById("exportIng");
-if (_exportIng) _exportIng.onclick = () => {
-  const blob = new Blob([JSON.stringify({ _app: "ingles", state }, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "ingles-respaldo-" + hoyISO() + ".json";
-  a.click();
-};
-const _importIngBtn = document.getElementById("importIngBtn");
-if (_importIngBtn) _importIngBtn.onclick = () => document.getElementById("importIng").click();
-const _importIng = document.getElementById("importIng");
-if (_importIng) _importIng.addEventListener("change", function () {
-  const file = this.files && this.files[0];
-  this.value = "";
-  if (!file) return;
-  const rd = new FileReader();
-  rd.onload = () => {
-    let d, nuevo = null;
-    try { d = JSON.parse(rd.result); } catch (e) { alert("El archivo no es válido."); return; }
-    if (d && d.state && d.state.dias) nuevo = d.state;                                   // respaldo de Inglés
-    else if (d && d.data && d.data.planIngles_v1) { try { nuevo = JSON.parse(d.data.planIngles_v1); } catch (e) {} } // respaldo global
-    else if (d && d.dias) nuevo = d;                                                      // estado directo
-    if (!nuevo || !nuevo.dias) { alert("El archivo no contiene un respaldo de Inglés."); return; }
-    if (!confirm("Esto reemplazará tu progreso de inglés actual. ¿Continuar?")) return;
-    state = nuevo;
-    state.dias = state.dias || {}; state.semana = state.semana || {};
-    state.writing = state.writing || {}; state.recordatorio = state.recordatorio || { on: false, hora: "19:00" };
-    save();
-    remOn.checked = !!state.recordatorio.on; remHora.value = state.recordatorio.hora || "19:00";
-    render(); if (typeof renderHistorial === "function") renderHistorial();
-  };
-  rd.readAsText(file);
-});
 
 // ====== HISTORIAL ======
 function dowFromISO(ds) {

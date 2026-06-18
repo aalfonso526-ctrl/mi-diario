@@ -441,7 +441,7 @@ calendario y la cuadrícula de ánimo. Muéstrame el diff.
 
 ## Fase 5 — Menores / limpieza (independientes entre sí)
 
-### [ ] Paso 12 — Prompt 14: Código muerto export/import + remOn/remHora
+### [x] Paso 12 — Prompt 14: Código muerto export/import + remOn/remHora
 
 ```
 En este proyecto («Mi Diario», PWA), hay código muerto inalcanzable desde la UI

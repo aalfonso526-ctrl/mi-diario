@@ -229,21 +229,6 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
-  .footer-actions {
-    text-align: center;
-    margin-top: 32px;
-  }
-  .footer-actions button {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    border-radius: 8px;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-size: 0.8rem;
-  }
-  .footer-actions button:hover { color: #ff3b30; border-color: #ff3b30; }
-
   @media (max-width: 480px) {
     .thumb { width: 90px; height: 51px; }
     .video-info .title { font-size: 0.82rem; }
@@ -325,7 +310,6 @@
 
 </main>
 </div>
-<input type="file" id="movImport" accept="application/json,.json" hidden>
 
 <div id="vidModal" class="vid-modal" style="display:none;">
   <div class="vid-box">
@@ -494,15 +478,6 @@ function render() {
   document.getElementById("stat-total").textContent = totalVideos;
 }
 
-function resetAll() {
-  if (confirm("¿Seguro que quieres borrar todo el historial de sesiones?")) {
-    progress = {};
-    save();
-    render();
-    if (currentView === "hist") renderHistorial();
-  }
-}
-
 // ── Historial ──
 const DAY_FULL = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 function dowFromDate(ds) {
@@ -587,35 +562,6 @@ function closeVideo() {
 }
 document.getElementById("vidClose").onclick = closeVideo;
 document.getElementById("vidModal").onclick = (e) => { if (e.target.id === "vidModal") closeVideo(); };
-
-// ── Exportar / importar respaldo ──
-function exportarMov() {
-  const blob = new Blob([JSON.stringify({ _app: "movilidad", progress }, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "movilidad-respaldo-" + isoLocal(new Date()) + ".json";
-  a.click();
-}
-function importarMov(file) {
-  const rd = new FileReader();
-  rd.onload = () => {
-    let d;
-    try { d = JSON.parse(rd.result); } catch (e) { alert("El archivo no es válido."); return; }
-    let prog = null;
-    if (d && d.progress && typeof d.progress === "object") prog = d.progress;                       // respaldo de Movilidad
-    else if (d && d.data && d.data["movilidad-progress"]) { try { prog = JSON.parse(d.data["movilidad-progress"]); } catch (e) {} } // respaldo global Mi Diario
-    else if (d && typeof d === "object" && !d._app && !d.data) prog = d;                              // objeto progress directo
-    if (!prog || typeof prog !== "object") { alert("El archivo no contiene un respaldo de Movilidad."); return; }
-    if (!confirm("Esto reemplazará tu progreso de movilidad actual. ¿Continuar?")) return;
-    progress = prog; save(); render();
-    if (currentView === "hist") renderHistorial();
-  };
-  rd.readAsText(file);
-}
-document.getElementById("movImport").addEventListener("change", function () {
-  if (this.files && this.files[0]) importarMov(this.files[0]);
-  this.value = "";
-});
 
 render();
 </script>
