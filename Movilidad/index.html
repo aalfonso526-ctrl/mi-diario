@@ -472,7 +472,9 @@ function render() {
   // ── Estadísticas ──
   let weekDays = 0;
   for (let i = 0; i < 7; i++) if (isDayComplete(i, dateOfWeekDay(i))) weekDays++;
-  const totalVideos = Object.values(progress).reduce((s, arr) => s + arr.length, 0);
+  // Solo sumamos los días (arrays de vídeos); excluimos la clave de metadatos
+  // __ts (mapa de sellos de borrado), que no es un array y daría NaN.
+  const totalVideos = Object.values(progress).reduce((s, arr) => s + (Array.isArray(arr) ? arr.length : 0), 0);
   document.getElementById("stat-streak").textContent = computeStreak();
   document.getElementById("stat-week").textContent = weekDays + "/7";
   document.getElementById("stat-total").textContent = totalVideos;
