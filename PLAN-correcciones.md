@@ -472,7 +472,10 @@ funcionando sin errores de consola tras la limpieza. Muéstrame el diff y la lis
 de lo que confirmaste muerto.
 ```
 
-### [ ] Paso 13 — Prompt 15: Ejercicio no carga shared/theme.js
+### [x] Paso 13 — Prompt 15: Ejercicio no carga shared/theme.js
+<!-- Ya implementado antes de esta sesión (commit ab038c7): Ejercicio carga
+     shared/theme.js en su <head>, igual que Movilidad e Inglés. Verificado en
+     navegador: en solitario aplica el tema del sistema (oscuro). Sin cambios. -->
 
 ```
 En este proyecto («Mi Diario», PWA), Movilidad e Inglés incluyen
