@@ -1889,10 +1889,16 @@
     state.tasks.forEach(function (t) {
       var h = t.history || [];
       if (h.indexOf(today) > -1 || t.completedAt === today) doneToday++;
-      weekDs.forEach(function (ds) { if (h.indexOf(ds) > -1) doneWeek++; });
-      if (h.indexOf(weekKey) > -1) doneWeek++;
-      if (h.indexOf(mKey) > -1) doneWeek++;
-      if (t.completedAt && weekDs.indexOf(t.completedAt) > -1) doneWeek++;
+      /* "esta semana" = tareas ÚNICAS con alguna finalización en la semana
+         actual. Cada tarea cuenta como máximo 1 aunque coincida por varias vías
+         (varios días de un hábito diario, clave semanal/mensual o completedAt),
+         para no inflar el total. */
+      var doneThisWeek =
+        weekDs.some(function (ds) { return h.indexOf(ds) > -1; }) ||
+        h.indexOf(weekKey) > -1 ||
+        h.indexOf(mKey) > -1 ||
+        (t.completedAt && weekDs.indexOf(t.completedAt) > -1);
+      if (doneThisWeek) doneWeek++;
     });
 
     var html = '<div class="stats-summary">' +

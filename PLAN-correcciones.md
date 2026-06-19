@@ -596,7 +596,7 @@ que abrir/recibir un cambio remoto no reescribe hub-logros-v1 innecesariamente.
 Muéstrame el diff.
 ```
 
-### [ ] Paso 18 — Prompt 21: buildStats de Tareas puede contar de más
+### [x] Paso 18 — Prompt 21: buildStats de Tareas puede contar de más
 
 ```
 En este proyecto («Mi Diario», PWA), buildStats de Tareas
