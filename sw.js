@@ -2,7 +2,12 @@
    Cachea el armazón y las 4 apps para que abran sin conexión.
    Estrategia: red primero y, si falla, lo guardado en caché.
    No interfiere con el service worker propio de To-do (su ámbito es To-do/). */
-var CACHE = "diario-hub-v26";
+/* Ámbito / (hub): este SW cachea el armazón del hub, los shared/ y las apps que
+   NO tienen su propio service worker (Ejercicio, Movilidad, Inglés). Los recursos
+   bajo /To-do/ los cachea el SW de Tareas (To-do/sw.js, ámbito más específico),
+   así que aquí NO se duplican. Los iconos de las notificaciones del hub apuntan a
+   To-do/icon-*.png, que sirve ese otro SW. */
+var CACHE = "diario-hub-v27";
 var CORE = [
   "index.html",
   "manifest.json",
@@ -12,12 +17,9 @@ var CORE = [
   "shared/store.js",
   "shared/merge.js",
   "shared/sync.js",
-  "To-do/index.html",
   "Ejercicio/entrenamientos.html",
   "Movilidad/index.html",
-  "plan-ingles/estudio-ingles.html",
-  "To-do/icon-192.png",
-  "To-do/icon-512.png"
+  "plan-ingles/estudio-ingles.html"
 ];
 
 self.addEventListener("install", function (e) {

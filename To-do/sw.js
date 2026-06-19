@@ -1,12 +1,23 @@
 /* Service worker de Mis Tareas: permite instalar la app y usarla sin internet.
-   Estrategia: red primero (para recibir actualizaciones), caché como respaldo offline. */
-var CACHE = "mis-tareas-v4";
+   Estrategia: red primero (para recibir actualizaciones), caché como respaldo offline.
+
+   Ámbito /To-do/: este SW es el ÚNICO responsable de cachear los recursos de
+   Tareas (su scope es más específico que el del hub, así que intercepta las
+   peticiones bajo /To-do/). El SW del hub ya no los cachea (evita doble caché). */
+var CACHE = "mis-tareas-v5";
 var ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
     caches.open(CACHE)
-      .then(function (c) { return c.addAll(ASSETS); })
+      .then(function (c) {
+        /* Cacheo per-item tolerante a fallos: si un recurso falla (red
+           intermitente, 404), se ignora pero NO aborta toda la instalación
+           (a diferencia de addAll). Mismo patrón que el SW del hub. */
+        return Promise.all(ASSETS.map(function (url) {
+          return c.add(url).catch(function () {});
+        }));
+      })
       .then(function () { return self.skipWaiting(); })
   );
 });

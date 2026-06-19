@@ -521,7 +521,7 @@ plan-ingles/estudio-ingles.html. Verifica: abrir Inglés NO debe disparar el
 prompt de permiso; activar el recordatorio SÍ. Muéstrame el diff.
 ```
 
-### [ ] Paso 15 — Prompt 16: Dos service workers / addAll frágil
+### [x] Paso 15 — Prompt 16: Dos service workers / addAll frágil
 
 ```
 En este proyecto («Mi Diario», PWA), coexisten dos service workers con ámbitos
