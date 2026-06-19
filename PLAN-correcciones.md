@@ -498,7 +498,7 @@ aplicar el tema oscuro, y dentro del hub debe seguir funcionando igual.
 Muéstrame el diff.
 ```
 
-### [ ] Paso 14 — Prompt 18: Notification.requestPermission() automático en Inglés
+### [x] Paso 14 — Prompt 18: Notification.requestPermission() automático en Inglés
 
 ```
 En este proyecto («Mi Diario», PWA), Inglés pide permiso de notificaciones nada

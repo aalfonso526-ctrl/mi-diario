@@ -628,7 +628,9 @@ document.getElementById("timerClose").onclick = () => {
   document.getElementById("timerBar").classList.remove("show");
   document.title = "Mi Plan de Inglés";
 };
-if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+// El permiso de notificaciones NO se pide al cargar (muchos navegadores lo
+// ignoran sin gesto del usuario y desde un iframe). Se solicita solo al activar
+// el recordatorio, que vive en Ajustes del hub (requestNotifPermission).
 
 // ====== RESET SEMANA ======
 document.getElementById("resetWeek").onclick = () => {
