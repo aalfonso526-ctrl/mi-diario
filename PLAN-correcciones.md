@@ -572,7 +572,7 @@ bloques seguidos (>6) y comprobar que el beep sigue sonando y que no se acumulan
 AudioContext. Muéstrame el diff.
 ```
 
-### [ ] Paso 17 — Prompt 19: renderDash tiene efecto secundario (persiste logros)
+### [x] Paso 17 — Prompt 19: renderDash tiene efecto secundario (persiste logros)
 
 ```
 En este proyecto («Mi Diario», PWA), el render del dashboard tiene un efecto

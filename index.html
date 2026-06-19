@@ -634,6 +634,8 @@
   window.addEventListener("storage", function (e) {
     if (!e || e.key === THEME_KEY) { applyTheme(); updateThemeUI(); }
     if (e && e.key && cloudReady) window.DiarioSync.notifyLocalChange(e.key);
+    /* Cambió el dato de una sección: recalcula y persiste logros (antes del render). */
+    if (e && e.key && KEY_TO_SECTION[e.key]) updateLogros();
     if (!panelHoy.classList.contains("hidden")) renderDash();
     if (!panelDiario.classList.contains("hidden") && e && e.key === DIARIO_KEY) openDiario();
   });
@@ -681,6 +683,7 @@
   function applyRemoteChanges(keys) {
     var sections = {};
     keys.forEach(function (k) { var s = KEY_TO_SECTION[k]; if (s) sections[s] = 1; });
+    updateLogros(); /* llegaron datos remotos: recalcula y persiste logros */
     frames.forEach(function (f) {
       if (sections[f.dataset.key] && loaded[f.dataset.key]) {
         /* No recargar encima de algo a medio escribir: posponer hasta que el
@@ -788,6 +791,51 @@
       }
     }
   ];
+
+  /* Logros recién conseguidos pendientes de resaltar en el próximo render. Lo
+     llena updateLogros() y lo consume (y limpia) renderDash. */
+  var newLogros = [];
+
+  /* Reúne los datos de origen que evalúan los logros (independiente del render).
+     Coincide con el achieveData que antes construía renderDash. */
+  function gatherAchieveData() {
+    var tasks = (safeParse("todo-app-v1", { tasks: [] }).tasks) || [];
+    var hist  = histList(safeParse("entreno_historial_v1", []));
+    var ing   = safeParse("planIngles_v1", { dias: {} });
+    var mov   = safeParse("movilidad-progress", {});
+    var diarData = getDiario();
+    function ejLocal(s) {
+      if (!s.fecha) return "";
+      var d = new Date(s.fecha);
+      return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    }
+    var ejDays = [];
+    hist.forEach(function (s) { var ds = ejLocal(s); if (ds && ejDays.indexOf(ds) === -1) ejDays.push(ds); });
+    ejDays.sort();
+    return {
+      done: tasks.filter(function (x) { return x.done; }).length,
+      hist: hist, tasks: tasks, ejDays: ejDays,
+      ingDays: Object.keys(ing.dias || {}).filter(function (ds) { return (ing.dias[ds] || []).some(Boolean); }).sort(),
+      movDays: Object.keys(mov).filter(function (ds) { return Array.isArray(mov[ds]) && mov[ds].length > 0; }).sort(),
+      diarDays: Object.keys(diarData).filter(function (ds) { var e = diarData[ds]; return e && (e.mood != null || (e.text && e.text.trim())); }).sort()
+    };
+  }
+
+  /* CÁLCULO + PERSISTENCIA de logros (efecto secundario aislado del render).
+     Se llama cuando cambian los datos de origen, NO en cada render. Solo escribe
+     hub-logros-v1 si se ha conseguido algo nuevo. */
+  function updateLogros() {
+    var d = gatherAchieveData();
+    var store = safeParse("hub-logros-v1", {});
+    var today = todayStr(), earned = [];
+    ACHIEVEMENTS.forEach(function (a) {
+      if (a.check(d) && !store[a.id]) { store[a.id] = today; earned.push(a.id); }
+    });
+    if (earned.length) {
+      try { localStorage.setItem("hub-logros-v1", JSON.stringify(store)); } catch (e) {}
+      earned.forEach(function (id) { if (newLogros.indexOf(id) === -1) newLogros.push(id); });
+    }
+  }
 
   function renderDash() {
     var now = new Date(), t = todayStr();
@@ -1056,19 +1104,9 @@
 
       '</div>';
 
-    /* ---------- Logros ---------- */
-    var achieveData = { done: totalDoneTar, hist: hist, tasks: tasks,
-      ejDays: ejDaysUniq, ingDays: ingDaysSorted, movDays: movDaysSorted, diarDays: diarDaysSorted };
+    /* ---------- Logros (SOLO LECTURA: el cálculo y la escritura de
+       hub-logros-v1 viven en updateLogros, que se llama al cambiar los datos) ---------- */
     var logrosStore = safeParse("hub-logros-v1", {});
-    var newlyEarned = [];
-    ACHIEVEMENTS.forEach(function (a) {
-      if (a.check(achieveData) && !logrosStore[a.id]) {
-        logrosStore[a.id] = t; newlyEarned.push(a.id);
-      }
-    });
-    if (newlyEarned.length) {
-      try { localStorage.setItem("hub-logros-v1", JSON.stringify(logrosStore)); } catch (e) {}
-    }
     var earnedCount = ACHIEVEMENTS.filter(function (a) { return !!logrosStore[a.id]; }).length;
 
     var cLogros =
@@ -1076,7 +1114,7 @@
       '<div class="logros-grid">' +
       ACHIEVEMENTS.map(function (a) {
         var earned = !!logrosStore[a.id];
-        var isNew  = newlyEarned.indexOf(a.id) !== -1;
+        var isNew  = newLogros.indexOf(a.id) !== -1;
         return '<div class="logro-card' + (earned ? " earned" : " locked") + (isNew ? " logro-new" : "") + '">' +
           '<div class="logro-icon">' + a.icon + '</div>' +
           '<div class="logro-name">' + a.name + '</div>' +
@@ -1094,6 +1132,8 @@
       '<div class="dash-cards">' + cTareas + cEjercicio + cMovilidad + cIngles + "</div>" +
       cLogros +
       cStats;
+
+    newLogros = []; /* el resaltado "nuevo" se muestra una sola vez */
 
     Array.prototype.slice.call(document.querySelectorAll(".dcard[data-go], .overdue-banner")).forEach(function (el) {
       el.addEventListener("click", function () { show(el.getAttribute("data-go")); });
@@ -1228,6 +1268,7 @@
        en este mismo documento, así que avisamos a la sync manualmente para que
        el Diario entre en el flujo de push como el resto de secciones. */
     if (cloudReady) window.DiarioSync.notifyLocalChange(DIARIO_KEY);
+    updateLogros(); /* cambió el Diario (dato del hub): recalcula logros */
     var hint = document.getElementById("diar-hint");
     if (hint) hint.textContent = "Guardado ✓";
     renderMoodGrid();
@@ -1842,6 +1883,7 @@
       if (!confirm(aviso + "\n\n¿Continuar?")) return;
       Object.keys(r.clean).forEach(function (k) { try { localStorage.setItem(k, r.clean[k]); } catch (e) {} });
       toast("Respaldo importado");
+      updateLogros(); /* datos reemplazados por el respaldo: recalcula logros */
       reloadFrames(); applyTheme(); renderDash();
     };
     rd.readAsText(file);
@@ -1924,6 +1966,7 @@
   var valid = start === "hoy" || start === "ajustes" || start === "diario" || start === "calendario" || frames.some(function (f) { return f.dataset.key === start; });
   if (!valid) start = "hoy";
   applyTheme();
+  updateLogros(); /* al arrancar: captura logros ya conseguidos con los datos actuales */
   show(start);
 
   /* ---------- Service Worker ---------- */
