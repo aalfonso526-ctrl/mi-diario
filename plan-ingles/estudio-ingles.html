@@ -585,8 +585,23 @@ document.getElementById("copyPrompt").onclick = function() {
 
 // ====== TIMER ======
 let timerInt = null, timerLeft = 0, timerPaused = false;
+
+// Un ÚNICO AudioContext reutilizable para toda la sección (los navegadores
+// limitan ~6 simultáneos; antes se creaba uno por beep y nunca se cerraban, así
+// que tras unos bloques el sonido dejaba de funcionar). Se crea de forma perezosa
+// y se desbloquea (resume) dentro del gesto del usuario que arranca el timer.
+let audioCtx = null;
+function getAudioCtx() {
+  try {
+    if (!audioCtx || audioCtx.state === "closed") audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  } catch (e) { audioCtx = null; }
+  return audioCtx;
+}
+
 function startTimer(min, label) {
   clearInterval(timerInt);
+  getAudioCtx();                 // desbloquea el audio dentro del gesto del usuario
   timerLeft = min * 60; timerPaused = false;
   document.getElementById("timerLabel").textContent = label;
   document.getElementById("timerToggle").textContent = "Pausar";
@@ -602,7 +617,7 @@ function tick() {
   if (timerLeft <= 0) {
     clearInterval(timerInt);
     document.getElementById("timerClock").textContent = "¡Listo! 🎉";
-    try { new AudioContext(); beep(); } catch {}
+    try { beep(); } catch {}
     if (Notification && Notification.permission === "granted")
       new Notification("⏱ Bloque terminado", { body: document.getElementById("timerLabel").textContent });
     return;
@@ -610,7 +625,8 @@ function tick() {
   timerLeft--;
 }
 function beep() {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const ctx = getAudioCtx();
+  if (!ctx) return;
   [0, .3, .6].forEach(t => {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.connect(g); g.connect(ctx.destination);
@@ -627,6 +643,9 @@ document.getElementById("timerClose").onclick = () => {
   clearInterval(timerInt);
   document.getElementById("timerBar").classList.remove("show");
   document.title = "Mi Plan de Inglés";
+  // Libera el AudioContext al cerrar el temporizador; getAudioCtx lo recrea
+  // (desbloqueado) en la próxima sesión de timer.
+  if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
 };
 // El permiso de notificaciones NO se pide al cargar (muchos navegadores lo
 // ignoran sin gesto del usuario y desde un iframe). Se solicita solo al activar

@@ -545,7 +545,7 @@ instala aunque un recurso de la lista no exista (simula un 404 en la lista).
 Muéstrame el diff.
 ```
 
-### [ ] Paso 16 — Prompt 11: Fuga de AudioContext en Inglés
+### [x] Paso 16 — Prompt 11: Fuga de AudioContext en Inglés
 
 ```
 En este proyecto («Mi Diario», PWA), el temporizador de Inglés crea AudioContext
